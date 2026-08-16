@@ -1,1 +1,1 @@
-# Activation functions.
+# Activation functions
