@@ -31,3 +31,25 @@ def load_LS_data(par_dir):
                     y.append(label)
 
     return np.array(X), np.array(y)
+
+def load_nls_data(filepath):
+    X = []
+    y = []
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    data_lines = [line.strip() for line in lines[1:] if line.strip()]
+    for index, line in enumerate(data_lines):
+        parts = line.split()
+        if len(parts) >= 2:
+            X.append([float(parts[0]), float(parts[1])])
+            if index < 500:
+                y.append(0)
+            elif index < 1000:
+                y.append(1)
+            else:
+                y.append(2) 
+                
+    return np.array(X), np.array(y)
+    
