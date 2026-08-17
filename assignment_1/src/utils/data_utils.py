@@ -52,4 +52,27 @@ def load_nls_data(filepath):
                 y.append(2) 
                 
     return np.array(X), np.array(y)
+
+
+def load_regression_csv(filepath):
     
+    X = []
+    y = []
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+        
+    start_idx = 0
+    if lines:
+        try:
+            float(lines[0].strip().split(',')[0])
+        except ValueError:
+            start_idx = 1
+           
+    for line in lines[start_idx:]:
+        line = line.strip()
+        if line:
+            parts = [float(val) for val in line.split(',')]
+            y.append(parts[-1])
+            X.append(parts[:-1])
+            
+    return np.array(X), np.array(y)
