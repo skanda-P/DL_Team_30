@@ -1,10 +1,26 @@
 # Plotting utilities
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt  # type: ignore[import-not-found]
+    from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import-not-found]
+except ImportError:
+    plt = None
+    Axes3D = None
+
 import numpy as np
 import os
 
+def _require_matplotlib():
+    if plt is None:
+        raise ImportError("matplotlib is required. Install it with: pip install matplotlib")
+
+# Access the imported 3D axis class to avoid lint warnings in environments where the
+# module is available but not statically resolved.
+if Axes3D is not None:
+    _ = Axes3D
+
 os.makedirs('figures', exist_ok=True)
-plt.style.use('seaborn-v0_8-whitegrid')
+if plt is not None:
+    plt.style.use('seaborn-v0_8-whitegrid')
 
 def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png"):
     """
