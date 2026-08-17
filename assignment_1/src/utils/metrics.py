@@ -107,3 +107,19 @@ def print_classification_report(metrics_dict):
     print(f"Micro Precision: {metrics_dict['micro_precision']:.4f}")
     print(f"Micro Recall:    {metrics_dict['micro_recall']:.4f}")
     print(f"Micro F-Measure: {metrics_dict['micro_f_measure']:.4f}")
+
+def mse(y_true, y_pred):
+    
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    return np.mean((y_true - y_pred) ** 2)
+
+def rmse(y_true, y_pred):
+    return np.sqrt(mse(y_true, y_pred))
+
+def percent_rmse(y_true, y_pred):
+
+    y_true = np.array(y_true)
+    error = rmse(y_true, y_pred)
+    mean_val = np.mean(y_true)
+    return (error / np.abs(mean_val)) * 100.0
