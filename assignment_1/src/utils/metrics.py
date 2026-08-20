@@ -50,7 +50,8 @@ def classification_metrics(y_true, y_pred, num_classes):
         recalls[i] = tp[i] / (tp[i] + fn[i]) if (tp[i] + fn[i]) > 0 else 0.0
         
         #classwise F-measure
-        f_measures[i] = 2 * (precisions[i] * recalls[i]) / (precisions[i] + recalls[i])
+        f_measures[i] = (2 * (precisions[i] * recalls[i]) / (precisions[i] + recalls[i])
+                          if (precisions[i] + recalls[i]) > 0 else 0.0)
 
     overall_accuracy = np.trace(cm) / np.sum(cm)
 
@@ -67,7 +68,8 @@ def classification_metrics(y_true, y_pred, num_classes):
     
     micro_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
     micro_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
-    micro_f_measure = 2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
+    micro_f_measure = (2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
+                        if (micro_precision + micro_recall) > 0 else 0.0)
         
     return {
         "confusion_matrix": cm,

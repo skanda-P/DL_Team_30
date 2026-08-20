@@ -1,26 +1,26 @@
 # Plotting utilities
 try:
-    import matplotlib.pyplot as plt  # type: ignore[import-not-found]
-    from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import-not-found]
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    from mpl_toolkits.mplot3d import Axes3D
 except ImportError:
-    plt = None
-    Axes3D = None
-
+    raise ImportError("matplotlib is required. Install it with: pip install matplotlib")
 import numpy as np
 import os
 
-def _require_matplotlib():
-    if plt is None:
-        raise ImportError("matplotlib is required. Install it with: pip install matplotlib")
+# Fixed, explicit class -> color mapping shared by every decision-region plot,
+# so that e.g. "Class 1" is always the same color whether it appears in a
+# pairwise plot (2 classes) or the combined plot (3 classes). Using a plain
+# 'viridis' cmap without this would auto-normalize per-plot and silently
+# reassign colors to whichever classes happen to be present in that figure.
+_CLASS_COLORS = plt.get_cmap('tab10').colors
 
-# Access the imported 3D axis class to avoid lint warnings in environments where the
-# module is available but not statically resolved.
-if Axes3D is not None:
-    _ = Axes3D
+def _class_color_map(all_classes):
+    return {int(c): _CLASS_COLORS[i % len(_CLASS_COLORS)]
+            for i, c in enumerate(sorted(int(c) for c in all_classes))}
 
 os.makedirs('figures', exist_ok=True)
-if plt is not None:
-    plt.style.use('seaborn-v0_8-whitegrid')
+plt.style.use('seaborn-v0_8-whitegrid')
 
 def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png"):
     """
@@ -36,11 +36,20 @@ def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="erro
     plt.tight_layout()
     
     filepath = os.path.join('figures', filename)
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
 
 
-def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region", filename="decision_region.png"):
+def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region",
+                           filename="decision_region.png", all_classes=None):
+    """
+    `all_classes` should be the full set of class labels for the overall
+    problem (e.g. np.unique(y) for the whole dataset), not just the classes
+    present in this particular plot. Passing it in explicitly is what lets a
+    pairwise plot (2 classes) and the combined plot (3 classes) use the same
+    color for the same class. If omitted, it falls back to the classes
+    present in this plot only (old behavior, single-plot use only).
+    """
     x_min, x_max = X_train[:, 0].min() - 1, X_train[:, 0].max() + 1
     y_min, y_max = X_train[:, 1].min() - 1, X_train[:, 1].max() + 1
     
@@ -49,12 +58,21 @@ def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region",
     
     Z = predict_fn(np.c_[xx.ravel(), yy.ravel()])
     Z = Z.reshape(xx.shape)
-    
+
+    if all_classes is None:
+        all_classes = np.unique(y_train)
+    all_classes = sorted(int(c) for c in all_classes)
+    color_map = _class_color_map(all_classes)
+
+    cmap = mcolors.ListedColormap([color_map[c] for c in all_classes])
+    boundaries = [c - 0.5 for c in all_classes] + [all_classes[-1] + 0.5]
+    norm = mcolors.BoundaryNorm(boundaries, cmap.N)
+
     plt.figure(figsize=(9, 6))
-    plt.contourf(xx, yy, Z, alpha=0.4, cmap='viridis')
+    plt.contourf(xx, yy, Z, alpha=0.4, cmap=cmap, norm=norm, levels=boundaries)
     
-    scatter = plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, 
-                          edgecolors='k', cmap='viridis', s=40, zorder=3)
+    scatter = plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train,
+                          edgecolors='k', cmap=cmap, norm=norm, s=40, zorder=3)
     
     classes = np.unique(y_train)
     handles, _ = scatter.legend_elements()
@@ -66,7 +84,7 @@ def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region",
     plt.tight_layout()
     
     filepath = os.path.join('figures', filename)
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
 
 def plot_regression_1d(X, y_true, y_pred, title="1D Regression: Target vs Model", filename="reg_1d.png"):
@@ -83,7 +101,7 @@ def plot_regression_1d(X, y_true, y_pred, title="1D Regression: Target vs Model"
     plt.tight_layout()
     
     filepath = os.path.join('figures', filename)
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
 
 def plot_regression_2d(X, y_true, y_pred, title="2D Regression: Target vs Model", filename="reg_2d.png"):
@@ -104,7 +122,7 @@ def plot_regression_2d(X, y_true, y_pred, title="2D Regression: Target vs Model"
     ax.legend(loc="best")
     
     filepath = os.path.join('figures', filename)
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
 
 def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output", filename="target_vs_model.png"):
@@ -125,5 +143,5 @@ def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output",
     plt.tight_layout()
     
     filepath = os.path.join('figures', filename)
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
