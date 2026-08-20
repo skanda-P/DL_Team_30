@@ -42,7 +42,7 @@ def generate_comparison_report():
                         is_classification = True
 
 
-            elif line.lower().startswith("accuracy"):
+            elif line.lower().startswith("overall_accuracy"):
                 accuracy = line.split(":")[1].strip()
             elif line.startswith("Test RMSE:"):
                 rmse_parts = line.split("|")

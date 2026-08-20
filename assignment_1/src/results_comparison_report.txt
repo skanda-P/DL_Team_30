@@ -1,0 +1,54 @@
+=== HYPERPARAMETER COMPARISON REPORT ===
+
+========================================
+1. LS CLASSIFICATION
+========================================
+
+--- Activation: LOGISTIC ---
+  LR: 0.01   | Epochs: 1000   | Accuracy: 0.9955555555555555
+  LR: 0.01   | Epochs: 500    | Accuracy: 0.9955555555555555
+  LR: 0.1    | Epochs: 1000   | Accuracy: 0.9977777777777778
+  LR: 0.1    | Epochs: 500    | Accuracy: 0.9955555555555555
+
+--- Activation: TANH ---
+  LR: 0.01   | Epochs: 1000   | Accuracy: 0.6733333333333333
+  LR: 0.01   | Epochs: 500    | Accuracy: 0.6866666666666666
+  LR: 0.1    | Epochs: 1000   | Accuracy: 0.6933333333333334
+  LR: 0.1    | Epochs: 500    | Accuracy: 0.6666666666666666
+
+
+========================================
+2. NLS CLASSIFICATION
+========================================
+
+--- Activation: LOGISTIC ---
+  LR: 0.01   | Epochs: 1000   | Accuracy: 0.8
+  LR: 0.01   | Epochs: 500    | Accuracy: 0.7933333333333333
+  LR: 0.1    | Epochs: 1000   | Accuracy: 0.8066666666666666
+  LR: 0.1    | Epochs: 500    | Accuracy: 0.8022222222222222
+
+--- Activation: TANH ---
+  LR: 0.01   | Epochs: 1000   | Accuracy: 0.5422222222222223
+  LR: 0.01   | Epochs: 500    | Accuracy: 0.5133333333333333
+  LR: 0.1    | Epochs: 1000   | Accuracy: 0.5666666666666667
+  LR: 0.1    | Epochs: 500    | Accuracy: 0.5666666666666667
+
+
+========================================
+3. REGRESSION: UNIVARIATE
+========================================
+
+  LR: 0.01   | Epochs: 1000   | Test RMSE: 0.2716 | Test %RMSE: 12.64%
+  LR: 0.01   | Epochs: 500    | Test RMSE: 0.3489 | Test %RMSE: 16.24%
+  LR: 0.05   | Epochs: 1000   | Test RMSE: 0.1528 | Test %RMSE: 7.11%
+  LR: 0.05   | Epochs: 500    | Test RMSE: 0.1727 | Test %RMSE: 8.04%
+
+
+========================================
+4. REGRESSION: BIVARIATE
+========================================
+
+  LR: 0.01   | Epochs: 1000   | Test RMSE: 1.4709 | Test %RMSE: 18.40%
+  LR: 0.01   | Epochs: 500    | Test RMSE: 1.5309 | Test %RMSE: 19.15%
+  LR: 0.05   | Epochs: 1000   | Test RMSE: 1.4252 | Test %RMSE: 17.83%
+  LR: 0.05   | Epochs: 500    | Test RMSE: 1.4282 | Test %RMSE: 17.87%
