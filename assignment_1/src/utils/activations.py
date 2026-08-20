@@ -1,4 +1,4 @@
-# Activation functions
+
 """
 Activation functions for the Deep Learning assignments.
 
@@ -41,19 +41,18 @@ def logistic(z):
 
     z = np.asarray(z, dtype=float)
 
-    # Numerically stable implementation.
-    # Directly computing exp(-z) can overflow for large negative values of z.
+
     output = np.empty_like(z)
 
     positive = z >= 0
     negative = ~positive
 
-    # z >= 0
+
     output[positive] = 1.0 / (
         1.0 + np.exp(-z[positive])
     )
 
-    # z < 0
+
     exp_z = np.exp(z[negative])
     output[negative] = exp_z / (
         1.0 + exp_z
@@ -71,7 +70,6 @@ def logistic_derivative(z):
     s = logistic(z)
 
     return s * (1.0 - s)
-
 
 
 def logistic_derivative_from_output(output):
@@ -106,6 +104,7 @@ def tanh(z):
 
 
 def tanh_derivative(z):
+            # Separate positive and negative values to prevent exponential overflow.
     """
     Derivative of the hyperbolic tangent activation.
 
@@ -139,5 +138,5 @@ ACTIVATIONS = {
     "logistic": (logistic, logistic_derivative),
 
     "tanh": (tanh, tanh_derivative),
-   
+
 }

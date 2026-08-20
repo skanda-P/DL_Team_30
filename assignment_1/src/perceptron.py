@@ -1,4 +1,4 @@
-# Perceptron implementation
+
 
 """
 Perceptron implementation for Deep Learning Assignment 1.
@@ -35,11 +35,11 @@ class Perceptron:
 
         self.activation, self.activation_derivative = ACTIVATIONS[activation]
 
-        # Model parameters
+
         self.weights = None
         self.bias = None
 
-        # Store error after every epoch
+
         self.errors = []
 
     def _initialize_parameters(self, n_features):
@@ -72,7 +72,7 @@ class Perceptron:
                 "X and y must contain the same number of samples."
             )
 
-        # Initialize model parameters
+
         self._initialize_parameters(X.shape[1])
 
         self.errors = []

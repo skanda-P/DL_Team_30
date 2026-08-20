@@ -2,7 +2,7 @@ import os
 import glob
 
 def generate_comparison_report():
-    # Recursively find all evaluation text files in the results directory
+
     search_pattern = os.path.join("results", "**", "evaluation_metrics.txt")
     filepaths = glob.glob(search_pattern, recursive=True)
 
@@ -10,13 +10,13 @@ def generate_comparison_report():
         print("No results found. Run your main_classification.py and main_regression.py scripts first!")
         return
 
-    # Dictionaries to group our parsed metrics
+
     class_results = {
-        "LS": {"logistic": [], "tanh": []}, 
+        "LS": {"logistic": [], "tanh": []},
         "NLS": {"logistic": [], "tanh": []}
     }
     reg_results = {
-        "Univariate": [], 
+        "Univariate": [],
         "Bivariate": []
     }
 
@@ -29,7 +29,7 @@ def generate_comparison_report():
         is_classification = False
 
         for line in lines:
-            # Extract configuration details
+
             if line.startswith("Configuration:"):
                 parts = line.replace("Configuration:", "").split("|")
                 if len(parts) >= 4:
@@ -37,11 +37,11 @@ def generate_comparison_report():
                     activation = parts[1].strip()
                     lr = parts[2].replace("LR:", "").strip()
                     epochs = parts[3].replace("EP:", "").strip()
-                    
+
                     if activation in ["logistic", "tanh"]:
                         is_classification = True
-                    
-            # Extract metrics
+
+
             elif line.lower().startswith("accuracy"):
                 accuracy = line.split(":")[1].strip()
             elif line.startswith("Test RMSE:"):
@@ -49,20 +49,20 @@ def generate_comparison_report():
                 test_rmse = rmse_parts[0].replace("Test RMSE:", "").strip()
                 test_prmse = rmse_parts[1].replace("Test %RMSE:", "").strip()
 
-        # Route the parsed data to the correct dictionary
+
         config_str = f"LR: {lr:<6} | Epochs: {epochs:<6}"
-        
+
         if is_classification and dataset in class_results:
             class_results[dataset][activation].append(f"{config_str} | Accuracy: {accuracy}")
         elif not is_classification and dataset in reg_results:
             reg_results[dataset].append(f"{config_str} | Test RMSE: {test_rmse} | Test %RMSE: {test_prmse}")
 
-    # Write everything to a formatted text file
+
     output_file = "results_comparison_report.txt"
     with open(output_file, "w") as f:
         f.write("=== HYPERPARAMETER COMPARISON REPORT ===\n")
 
-        # Section 1: Classification - LS
+
         f.write("\n" + "="*40 + "\n")
         f.write("1. LS CLASSIFICATION\n")
         f.write("="*40 + "\n")
@@ -71,7 +71,7 @@ def generate_comparison_report():
             for result in sorted(class_results["LS"][act]):
                 f.write(f"  {result}\n")
 
-        # Section 2: Classification - NLS
+
         f.write("\n\n" + "="*40 + "\n")
         f.write("2. NLS CLASSIFICATION\n")
         f.write("="*40 + "\n")
@@ -80,14 +80,14 @@ def generate_comparison_report():
             for result in sorted(class_results["NLS"][act]):
                 f.write(f"  {result}\n")
 
-        # Section 3: Regression - Univariate
+
         f.write("\n\n" + "="*40 + "\n")
         f.write("3. REGRESSION: UNIVARIATE\n")
         f.write("="*40 + "\n\n")
         for result in sorted(reg_results["Univariate"]):
             f.write(f"  {result}\n")
 
-        # Section 4: Regression - Bivariate
+
         f.write("\n\n" + "="*40 + "\n")
         f.write("4. REGRESSION: BIVARIATE\n")
         f.write("="*40 + "\n\n")

@@ -1,4 +1,4 @@
-# Data loading utilities
+
 import numpy as np
 import os
 import csv
@@ -62,8 +62,8 @@ def load_nls_data(filepath):
             elif index < 1000:
                 y.append(1)
             else:
-                y.append(2) 
-                
+                y.append(2)
+
     return np.array(X), np.array(y)
 
 
@@ -72,26 +72,26 @@ def load_regression_csv(filepath):
     y = []
     with open(filepath, 'r') as f:
         lines = f.readlines()
-        
+
     start_idx = 0
     if lines:
         try:
             float(lines[0].strip().split(',')[0])
         except ValueError:
             start_idx = 1
-           
+
     for line in lines[start_idx:]:
         line = line.strip()
         if line:
             parts = [float(val) for val in line.split(',')]
             y.append(parts[-1])
             X.append(parts[:-1])
-            
+
     return np.array(X), np.array(y)
 
 
 def stratified_train_test_split(X, y, test_ratio=0.3, seed=42):
-    rng = np.random.default_rng(seed)  # seeded once; state advances across classes below
+    rng = np.random.default_rng(seed)
 
     X_train_parts, X_test_parts = [], []
     y_train_parts, y_test_parts = [], []

@@ -6,7 +6,7 @@ from utils.data_utils import load_LS_data, load_nls_data, stratified_train_test_
 from utils.metrics import classification_metrics, print_classification_report
 from utils.plotting import plot_decision_regions, plot_error_vs_epochs
 
-# Configuration
+
 DATA_DIR = "data"
 LS_DIR = os.path.join(DATA_DIR, "Classification", "LS_Group30")
 NLS_FILE = os.path.join(DATA_DIR, "Classification", "NLS_Group30.txt")
@@ -18,7 +18,7 @@ TEST_RATIO = 0.3
 SEED = 42
 
 def run_dataset(dataset_name, X, y, activation, lr, epochs):
-    # Use absolute path to bypass plotting.py's 'figures/' folder
+
     out_dir = os.path.abspath(os.path.join("results", dataset_name, f"{activation}_LR{lr}_EP{epochs}"))
     os.makedirs(out_dir, exist_ok=True)
 
@@ -28,11 +28,11 @@ def run_dataset(dataset_name, X, y, activation, lr, epochs):
     all_classes = np.unique(y)
     num_classes = len(all_classes)
 
-    # Train model
+
     clf = OneVsOneClassifier(activation=activation, learning_rate=lr, epochs=epochs)
     clf.fit(X_train, y_train)
 
-    # Plot error vs epochs for each pair
+
     for (class_a, class_b), model in clf.classifiers.items():
         plot_error_vs_epochs(
             model.errors,
@@ -40,7 +40,7 @@ def run_dataset(dataset_name, X, y, activation, lr, epochs):
             filename=os.path.join(out_dir, f"error_class{class_a}_vs_class{class_b}.png"),
         )
 
-    # Plot decision regions for each pair
+
     for (class_a, class_b) in clf.classifiers:
         mask = (y_train == class_a) | (y_train == class_b)
 
@@ -54,7 +54,7 @@ def run_dataset(dataset_name, X, y, activation, lr, epochs):
             all_classes=all_classes,
         )
 
-    # Plot combined decision region
+
     plot_decision_regions(
         X_train, y_train, clf.predict,
         title=f"{dataset_name} ({activation}): Combined Decision",
@@ -62,7 +62,7 @@ def run_dataset(dataset_name, X, y, activation, lr, epochs):
         all_classes=all_classes,
     )
 
-    # Evaluate and save metrics to text file
+
     y_pred_test = clf.predict(X_test)
     metrics = classification_metrics(y_test, y_pred_test, num_classes)
 
@@ -79,7 +79,7 @@ def main():
     X_nls, y_nls = load_nls_data(NLS_FILE)
     datasets = {"LS": (X_ls, y_ls), "NLS": (X_nls, y_nls)}
 
-    # Iterate through all hyperparameter combinations
+
     results = {}
     for dataset_name, (X, y) in datasets.items():
         for activation in ACTIVATIONS:

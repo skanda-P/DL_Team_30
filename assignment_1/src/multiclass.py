@@ -1,11 +1,11 @@
-# Multi-class perceptron implementation
+
 
 from itertools import combinations
 import numpy as np
 from perceptron import Perceptron
 
 class OneVsOneClassifier:
-    
+
     def __init__(self, activation="logistic", learning_rate=0.01, epochs=1000):
         self.activation = activation
         self.learning_rate = learning_rate
@@ -29,7 +29,7 @@ class OneVsOneClassifier:
             X_pair = X[mask]
             y_pair_raw = y[mask]
 
-            # Encode class_a -> 0, class_b -> 1 for this binary sub-problem.
+
             y_pair = np.where(y_pair_raw == class_a, 0.0, 1.0)
 
             model = Perceptron(
