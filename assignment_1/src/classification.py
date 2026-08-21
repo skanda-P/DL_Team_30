@@ -12,8 +12,8 @@ LS_DIR = os.path.join(DATA_DIR, "Classification", "LS_Group30")
 NLS_FILE = os.path.join(DATA_DIR, "Classification", "NLS_Group30.txt")
 
 ACTIVATIONS = ["logistic", "tanh"]
-LEARNING_RATES = [0.01, 0.1]
-EPOCHS_LIST = [500, 1000]
+LEARNING_RATES = [0.001, 0.01, 0.1, 0.2]
+EPOCHS_LIST = [500, 1000, 1500, 2000]
 TEST_RATIO = 0.3
 SEED = 42
 
