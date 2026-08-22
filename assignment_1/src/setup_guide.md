@@ -1,10 +1,10 @@
 # Setup Guide
 
-This guide assumes that you downloaded only the `src` folder. All commands below must be run from inside that folder.
+All commands below must be run from inside the 'Group30_Assignment1_code' folder.
 
 ## Folder Contents
 
-The `src` folder should contain:
+The `Group30_Assignment1_code` folder should contain:
 
 - `classification.py`
 - `regression.py`
@@ -16,7 +16,7 @@ The `src` folder should contain:
 - `utils/`
 - `results/`
 
-The `data/` folder is required because the classification and regression scripts load their input files using paths relative to `src`.
+The `data/` folder is required because the classification and regression scripts load their input files using paths relative to `Group30_Assignment1_code`.
 
 ## Prerequisites
 
@@ -28,10 +28,10 @@ python --version
 
 ## Open the Project Folder
 
-In PowerShell, change to the downloaded `src` folder. Replace the path with the location where you saved it:
+In PowerShell, change to the downloaded `Group30_Assignment1_code` folder. Replace the path with the location where you saved it:
 
 ```powershell
-cd "D:\path\to\src"
+cd "D:\path\to\Group30_Assignment1_code"
 ```
 
 Verify that the required files are present:
@@ -39,23 +39,6 @@ Verify that the required files are present:
 ```powershell
 Get-ChildItem
 ```
-
-## Create a Virtual Environment
-
-Create and activate a virtual environment inside `src`:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-If PowerShell blocks activation, run PowerShell as the current user and retry:
-
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-```
-
-The command prompt should show `(.venv)` after activation.
 
 ## Install Dependencies
 
@@ -68,7 +51,7 @@ python -m pip install -r requirements.txt
 
 ## Run Classification
 
-Run the classification experiments from the `src` folder:
+Run the classification experiments from the `Group30_Assignment1_code` folder:
 
 ```powershell
 python classification.py
@@ -112,37 +95,11 @@ results_comparison_report.txt
 
 ## Run Everything in Order
 
-After activating the virtual environment, the complete workflow is:
+The complete workflow is:
 
 ```powershell
 python -m pip install -r requirements.txt
 python classification.py
 python regression.py
 python compare_results.py
-```
-
-## Troubleshooting
-
-### `ModuleNotFoundError`
-
-Confirm that the virtual environment is active and that dependencies were installed with:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-### Data file not found
-
-Run the scripts from inside `src`, not from its parent directory. The `data` folder must be directly inside the current working directory.
-
-### No results found
-
-Run `classification.py` and `regression.py` before running `compare_results.py`.
-
-### Deactivate the virtual environment
-
-When finished, run:
-
-```powershell
-deactivate
 ```
