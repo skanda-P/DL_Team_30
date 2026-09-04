@@ -1,3 +1,6 @@
-Anushaa B - Activation functions, data parsing functions, report
-Skanda P - Classification and regression pipelines, 3-class classification logic, report
-Thiaana B - Perceptron logic, plotting functions, result analysis, report
+# Team Contributions (DL_Team_30)
+
+<!-- Fill in member names and contributions for Assignment 2 -->
+- Member 1: [Name] - [Contributions]
+- Member 2: [Name] - [Contributions]
+- Member 3: [Name] - [Contributions]
