@@ -90,6 +90,30 @@ def plot_node_output_surface(X, z, node_label, split_name, filename, title=None)
     plt.close()
 
 
+"""added"""
+def plot_node_output_1d(X, z, node_label, split_name, filename, title=None):
+    # 2D scatter of node output over a single (1D) input feature.
+    # Companion to plot_node_output_surface, used for the univariate dataset.
+    plt.figure(figsize=(8, 5))
+
+    x_flat = np.asarray(X).reshape(-1)
+    sort_idx = np.argsort(x_flat)
+
+    plt.scatter(x_flat, z, color='#9467bd', alpha=0.6, s=25, zorder=2)
+    plt.plot(x_flat[sort_idx], np.asarray(z)[sort_idx], color='#9467bd',
+              alpha=0.3, linewidth=1.0, zorder=1)
+
+    plt.xlabel('x-values', fontsize=12, fontweight='bold')
+    plt.ylabel('Node Output', fontsize=12, fontweight='bold')
+    if title is None:
+        title = f"{node_label} ({split_name.capitalize()})"
+    plt.title(title, fontsize=14, pad=15)
+    plt.tight_layout()
+
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+
 def plot_regression_1d(X, y_true, y_pred, title="1D Regression: Target vs Model", filename="reg_1d.png"):
     plt.figure(figsize=(9, 6))
     plt.scatter(X, y_true, color='#1f77b4', label='Target Output', alpha=0.6, s=30, zorder=2)

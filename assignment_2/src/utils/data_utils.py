@@ -81,6 +81,23 @@ def stratified_three_way_split(X, y, train_ratio=0.6, val_ratio=0.2, seed=42):
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
+def three_way_split(X, y, train_ratio=0.6, val_ratio=0.2, seed=42):
+    # Plain (non-stratified) train/val/test split, for continuous-valued
+    # (regression) targets where per-class stratification does not apply.
+    rng = np.random.default_rng(seed)
+
+    test_ratio = 1.0 - train_ratio - val_ratio
+    val_ratio_of_rem = val_ratio / (train_ratio + val_ratio)
+
+    X_rem, X_test, y_rem, y_test = train_test_split(
+        X, y, test_ratio=test_ratio, rng=rng
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_rem, y_rem, test_ratio=val_ratio_of_rem, rng=rng
+    )
+
+    return X_train, X_val, X_test, y_train, y_val, y_test
+
 
 def load_LS_data(par_dir):
     X = []
