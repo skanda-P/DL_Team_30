@@ -21,7 +21,14 @@ class Perceptron:
     Single-layer perceptron trained using gradient descent.
     """
 
-    def __init__(self, learning_rate=0.01, epochs=1000, activation="logistic"):
+    def __init__(
+        self,
+        learning_rate=0.01,
+        epochs=2000,
+        activation="logistic",
+        stopping_threshold=0.0001,
+        patience=5,
+    ):
 
         if activation not in ACTIVATIONS:
             raise ValueError(
@@ -32,15 +39,16 @@ class Perceptron:
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.activation_name = activation
+        self.stopping_threshold = stopping_threshold
+        self.patience = patience if patience is not None else 1
 
         self.activation, self.activation_derivative = ACTIVATIONS[activation]
-
 
         self.weights = None
         self.bias = None
 
-
         self.errors = []
+        self.epochs_run = 0
 
     def _initialize_parameters(self, n_features):
         self.weights = np.zeros(n_features, dtype=float)
@@ -72,12 +80,14 @@ class Perceptron:
                 "X and y must contain the same number of samples."
             )
 
-
         self._initialize_parameters(X.shape[1])
 
         self.errors = []
-
+        self.epochs_run = 0
         n_samples = X.shape[0]
+
+        previous_error = None
+        patience_counter = 0
 
         for epoch in range(self.epochs):
 
@@ -98,6 +108,18 @@ class Perceptron:
             mse = np.mean(error ** 2)
             self.errors.append(mse)
 
+            if self.stopping_threshold is not None and previous_error is not None:
+                change = abs(mse - previous_error)
+                if change < self.stopping_threshold:
+                    patience_counter += 1
+                    if patience_counter >= self.patience:
+                        break
+                else:
+                    patience_counter = 0
+
+            previous_error = mse
+
+        self.epochs_run = len(self.errors)
         return self
 
     def predict(self, X):

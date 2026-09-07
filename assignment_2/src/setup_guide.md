@@ -6,17 +6,20 @@ All commands below must be run from inside the `Group30_Assignment2_code` folder
 
 The `Group30_Assignment2_code` folder contains:
 
-- `fcnn.py`: Fully Connected Neural Network implemented from scratch (NumPy only).
+- `fcnn.py`: Fully Connected Neural Network implemented from scratch (NumPy only) with early stopping convergence criteria (patience=5, loss threshold=0.0001).
 - `model_selection.py`: Architecture grid generation, cross-validation sweep, and best-model selection.
 - `classification.py`: Full classification pipeline for Linearly Separable (LS) and Non-Linearly Separable (NLS) datasets.
-- `compare_with_a1.py`: Compares Assignment 2's best FCNN performance against Assignment 1's single-neuron model.
-- `regression.py`: Stub for regression tasks (not yet implemented in this pass).
-- `multiclass.py`: Carried over from Assignment 1 for reference and baselines.
-- `perceptron.py`: Carried over from Assignment 1 for reference.
+- `regression.py`: Full regression pipeline for Univariate and Bivariate datasets.
+- `classification_a1.py`: Assignment 1 single-neuron classification baseline trained with convergence criteria on the exact same 60/20/20 split.
+- `regression_a1.py`: Assignment 1 single-neuron linear regression baseline trained with convergence criteria on the exact same 60/20/20 split.
+- `compare_results.py`: Aggregates all hyperparameter sweeps into structured summary reports for both A2 (`results/summary.txt`) and A1 (`results/a1/summary.txt`).
+- `compare_with_a1.py`: Generates the head-to-head performance and convergence comparison report (`results/a1_vs_a2_comparison.txt`).
+- `multiclass.py`: One-vs-One multi-class classifier using single-neuron perceptron with early stopping.
+- `perceptron.py`: Single-neuron perceptron with early stopping.
 - `requirements.txt`: Dependencies specification.
 - `data/`: Datasets for classification and regression.
 - `utils/`: Data loading, activation functions, performance metrics, and visualization utilities.
-- `results/`: Experiment artifacts, metrics, and plots.
+- `results/`: Experiment artifacts, metrics, and plots for all A2 and A1 models.
 
 ## Prerequisites
 
@@ -34,43 +37,43 @@ Install the required packages listed in `requirements.txt`:
 python -m pip install -r requirements.txt
 ```
 
-## Run Classification Pipeline
+## Run Pipelines
 
-Run the complete classification experiments:
-
+### 1. Classification (Assignment 2 - FCNN)
 ```powershell
 python classification.py
 ```
+Performs 60/20/20 split, sweeps architectures and learning rates with early stopping (patience=5, diff=0.0001), evaluates test performance, and saves decision regions, error curves, and 3D node output surfaces under `results/LS/` and `results/NLS/`.
 
-This script performs:
-1. Stratified 60% train / 20% validation / 20% test splitting.
-2. Architecture and hyperparameter sweeps over both LS (1 hidden layer) and NLS (2 hidden layers).
-3. Evaluation metric logging (`evaluation_metrics.txt`) and decision region plotting (`decision_region.png`) for all candidate architectures under `results/<dataset>/sweep/<config_id>/`.
-4. Selection of the best architecture based on validation metrics, followed by test set evaluation under `results/<dataset>/best/`.
-5. Generation of error curves, decision regions, and 3D node output surface plots across all splits for the best models.
-6. A summary table saved to `results/summary.txt`.
-
-Results are saved under:
-- `results/LS/sweep/`
-- `results/LS/best/`
-- `results/NLS/sweep/`
-- `results/NLS/best/`
-
-## Compare with Assignment 1
-
-To compare the best FCNN architectures with Assignment 1's single-neuron results:
-
+### 2. Regression (Assignment 2 - FCNN)
 ```powershell
+python regression.py
+```
+Evaluates Univariate (1 hidden layer) and Bivariate (1 & 2 hidden layers) regression models, logs RMSE & %RMSE on train, val, and test splits, and generates fit, scatter, error, and 3D node output plots under `results/Univariate/` and `results/Bivariate/`.
+
+### 3. Assignment 1 Baseline Pipelines
+```powershell
+python classification_a1.py
+python regression_a1.py
+```
+Trains single-neuron models on the exact same 60/20 train/validation splits and evaluates on the exact same 20% test split with the identical convergence rule. Saves results directly to `results/a1/`.
+
+### 4. Generate Summaries & Comparison Reports
+```powershell
+python compare_results.py
 python compare_with_a1.py
 ```
+- `compare_results.py`: Generates `results/summary.txt` (A2) and `results/a1/summary.txt` (A1).
+- `compare_with_a1.py`: Generates `results/a1_vs_a2_comparison.txt` containing side-by-side performance tables (accuracy, RMSE, %RMSE, convergence epochs, speedup factors, and inferences).
 
-Comparison table will be printed to stdout and saved to:
-- `results/a1_vs_a2_comparison.txt`
-
-## Complete Run Sequence
+## Complete Execution Sequence
 
 ```powershell
 python -m pip install -r requirements.txt
+python classification_a1.py
+python regression_a1.py
 python classification.py
+python regression.py
+python compare_results.py
 python compare_with_a1.py
 ```

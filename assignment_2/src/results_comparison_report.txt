@@ -1,0 +1,182 @@
+=== HYPERPARAMETER COMPARISON REPORT (ASSIGNMENT 2 - FCNN) ===
+
+========================================
+1. LS CLASSIFICATION
+========================================
+
+--- Activation: LOGISTIC ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 43   | Accuracy: 0.9967
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 27   | Accuracy: 0.9967
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 24   | Accuracy: 0.9967
+  Arch: H2         | LR: 0.01   | Epochs to Converge: 120  | Accuracy: 1.0000
+  Arch: H2         | LR: 0.05   | Epochs to Converge: 101  | Accuracy: 1.0000
+  Arch: H2         | LR: 0.1    | Epochs to Converge: 76   | Accuracy: 1.0000
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 32   | Accuracy: 0.9967
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 19   | Accuracy: 0.9967
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 16   | Accuracy: 0.9967
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 80   | Accuracy: 0.9967
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 43   | Accuracy: 0.9967
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 31   | Accuracy: 0.9967
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 58   | Accuracy: 0.9967
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 33   | Accuracy: 0.9967
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 27   | Accuracy: 0.9967
+
+--- Activation: TANH ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 28   | Accuracy: 1.0000
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 14   | Accuracy: 1.0000
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 11   | Accuracy: 1.0000
+  Arch: H2         | LR: 0.01   | Epochs to Converge: 30   | Accuracy: 1.0000
+  Arch: H2         | LR: 0.05   | Epochs to Converge: 16   | Accuracy: 1.0000
+  Arch: H2         | LR: 0.1    | Epochs to Converge: 13   | Accuracy: 1.0000
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 17   | Accuracy: 0.9967
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 10   | Accuracy: 1.0000
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 8    | Accuracy: 0.9967
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 37   | Accuracy: 1.0000
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 19   | Accuracy: 1.0000
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 13   | Accuracy: 1.0000
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 28   | Accuracy: 1.0000
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 15   | Accuracy: 1.0000
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 11   | Accuracy: 0.9967
+
+--- Best Architecture (Cross-Validation) ---
+  Best Config: H2_logistic_LR0.01
+  Epochs to Converge: 120
+  Test Accuracy: 0.9967
+
+
+========================================
+2. NLS CLASSIFICATION
+========================================
+
+--- Activation: LOGISTIC ---
+  Arch: H16-8      | LR: 0.01   | Epochs to Converge: 201  | Accuracy: 0.8667
+  Arch: H16-8      | LR: 0.05   | Epochs to Converge: 167  | Accuracy: 1.0000
+  Arch: H16-8      | LR: 0.1    | Epochs to Converge: 93   | Accuracy: 1.0000
+  Arch: H32-16     | LR: 0.01   | Epochs to Converge: 114  | Accuracy: 0.8567
+  Arch: H32-16     | LR: 0.05   | Epochs to Converge: 179  | Accuracy: 1.0000
+  Arch: H32-16     | LR: 0.1    | Epochs to Converge: 110  | Accuracy: 1.0000
+  Arch: H4-2       | LR: 0.01   | Epochs to Converge: 220  | Accuracy: 0.8733
+  Arch: H4-2       | LR: 0.05   | Epochs to Converge: 216  | Accuracy: 1.0000
+  Arch: H4-2       | LR: 0.1    | Epochs to Converge: 318  | Accuracy: 1.0000
+  Arch: H8-4       | LR: 0.01   | Epochs to Converge: 448  | Accuracy: 1.0000
+  Arch: H8-4       | LR: 0.05   | Epochs to Converge: 134  | Accuracy: 1.0000
+  Arch: H8-4       | LR: 0.1    | Epochs to Converge: 87   | Accuracy: 1.0000
+
+--- Activation: TANH ---
+  Arch: H16-8      | LR: 0.01   | Epochs to Converge: 53   | Accuracy: 1.0000
+  Arch: H16-8      | LR: 0.05   | Epochs to Converge: 25   | Accuracy: 1.0000
+  Arch: H16-8      | LR: 0.1    | Epochs to Converge: 31   | Accuracy: 1.0000
+  Arch: H32-16     | LR: 0.01   | Epochs to Converge: 52   | Accuracy: 1.0000
+  Arch: H32-16     | LR: 0.05   | Epochs to Converge: 19   | Accuracy: 1.0000
+  Arch: H32-16     | LR: 0.1    | Epochs to Converge: 24   | Accuracy: 1.0000
+  Arch: H4-2       | LR: 0.01   | Epochs to Converge: 87   | Accuracy: 1.0000
+  Arch: H4-2       | LR: 0.05   | Epochs to Converge: 31   | Accuracy: 1.0000
+  Arch: H4-2       | LR: 0.1    | Epochs to Converge: 2000 | Accuracy: 0.9500
+  Arch: H8-4       | LR: 0.01   | Epochs to Converge: 56   | Accuracy: 1.0000
+  Arch: H8-4       | LR: 0.05   | Epochs to Converge: 21   | Accuracy: 1.0000
+  Arch: H8-4       | LR: 0.1    | Epochs to Converge: 19   | Accuracy: 1.0000
+
+--- Best Architecture (Cross-Validation) ---
+  Best Config: H4-2_logistic_LR0.05
+  Epochs to Converge: 216
+  Test Accuracy: 1.0000
+
+
+========================================
+3. REGRESSION: UNIVARIATE
+========================================
+
+--- Activation: LOGISTIC ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 25   | Val RMSE: 0.1355 | Val %RMSE: 6.21%
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 69   | Val RMSE: 0.0717 | Val %RMSE: 3.29%
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 41   | Val RMSE: 0.0633 | Val %RMSE: 2.90%
+  Arch: H2         | LR: 0.01   | Epochs to Converge: 62   | Val RMSE: 0.1425 | Val %RMSE: 6.53%
+  Arch: H2         | LR: 0.05   | Epochs to Converge: 80   | Val RMSE: 0.0799 | Val %RMSE: 3.66%
+  Arch: H2         | LR: 0.1    | Epochs to Converge: 52   | Val RMSE: 0.0662 | Val %RMSE: 3.03%
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 37   | Val RMSE: 0.1427 | Val %RMSE: 6.54%
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 80   | Val RMSE: 0.0744 | Val %RMSE: 3.41%
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 41   | Val RMSE: 0.0700 | Val %RMSE: 3.21%
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 20   | Val RMSE: 0.1376 | Val %RMSE: 6.30%
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 52   | Val RMSE: 0.0876 | Val %RMSE: 4.01%
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 42   | Val RMSE: 0.0687 | Val %RMSE: 3.15%
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 28   | Val RMSE: 0.1379 | Val %RMSE: 6.32%
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 69   | Val RMSE: 0.0706 | Val %RMSE: 3.24%
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 37   | Val RMSE: 0.0686 | Val %RMSE: 3.14%
+
+--- Activation: TANH ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 40   | Val RMSE: 0.0747 | Val %RMSE: 3.42%
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 18   | Val RMSE: 0.0597 | Val %RMSE: 2.74%
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 48   | Val RMSE: 0.0829 | Val %RMSE: 3.80%
+  Arch: H2         | LR: 0.01   | Epochs to Converge: 11   | Val RMSE: 0.1668 | Val %RMSE: 7.64%
+  Arch: H2         | LR: 0.05   | Epochs to Converge: 47   | Val RMSE: 0.0604 | Val %RMSE: 2.77%
+  Arch: H2         | LR: 0.1    | Epochs to Converge: 31   | Val RMSE: 0.0598 | Val %RMSE: 2.74%
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 41   | Val RMSE: 0.0729 | Val %RMSE: 3.34%
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 32   | Val RMSE: 0.0666 | Val %RMSE: 3.05%
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 28   | Val RMSE: 0.0965 | Val %RMSE: 4.42%
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 36   | Val RMSE: 0.0801 | Val %RMSE: 3.67%
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 23   | Val RMSE: 0.0588 | Val %RMSE: 2.69%
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 17   | Val RMSE: 0.0633 | Val %RMSE: 2.90%
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 80   | Val RMSE: 0.0824 | Val %RMSE: 3.77%
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 31   | Val RMSE: 0.0632 | Val %RMSE: 2.90%
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 18   | Val RMSE: 0.0565 | Val %RMSE: 2.59%
+
+--- Best Architecture (Cross-Validation) ---
+  Best Config: H8_tanh_LR0.1
+  Epochs to Converge: 18
+  Test RMSE: 0.0600 | Test %RMSE: 2.79%
+
+
+========================================
+4. REGRESSION: BIVARIATE
+========================================
+
+--- Activation: LOGISTIC ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 45   | Val RMSE: 0.0871 | Val %RMSE: 1.09%
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 30   | Val RMSE: 0.0743 | Val %RMSE: 0.93%
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 22   | Val RMSE: 0.0750 | Val %RMSE: 0.94%
+  Arch: H16-8      | LR: 0.01   | Epochs to Converge: 37   | Val RMSE: 0.0974 | Val %RMSE: 1.22%
+  Arch: H16-8      | LR: 0.05   | Epochs to Converge: 19   | Val RMSE: 0.0805 | Val %RMSE: 1.01%
+  Arch: H16-8      | LR: 0.1    | Epochs to Converge: 22   | Val RMSE: 0.0874 | Val %RMSE: 1.10%
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 24   | Val RMSE: 0.1040 | Val %RMSE: 1.31%
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 21   | Val RMSE: 0.0997 | Val %RMSE: 1.25%
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 21   | Val RMSE: 0.0845 | Val %RMSE: 1.06%
+  Arch: H32-16     | LR: 0.01   | Epochs to Converge: 38   | Val RMSE: 0.1080 | Val %RMSE: 1.36%
+  Arch: H32-16     | LR: 0.05   | Epochs to Converge: 29   | Val RMSE: 0.0737 | Val %RMSE: 0.93%
+  Arch: H32-16     | LR: 0.1    | Epochs to Converge: 18   | Val RMSE: 0.0716 | Val %RMSE: 0.90%
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 25   | Val RMSE: 0.0841 | Val %RMSE: 1.06%
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 16   | Val RMSE: 0.0719 | Val %RMSE: 0.90%
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 17   | Val RMSE: 0.0645 | Val %RMSE: 0.81%
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 43   | Val RMSE: 0.0833 | Val %RMSE: 1.05%
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 18   | Val RMSE: 0.0754 | Val %RMSE: 0.95%
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 18   | Val RMSE: 0.0828 | Val %RMSE: 1.04%
+  Arch: H8-4       | LR: 0.01   | Epochs to Converge: 26   | Val RMSE: 0.0926 | Val %RMSE: 1.16%
+  Arch: H8-4       | LR: 0.05   | Epochs to Converge: 18   | Val RMSE: 0.0866 | Val %RMSE: 1.09%
+  Arch: H8-4       | LR: 0.1    | Epochs to Converge: 18   | Val RMSE: 0.1049 | Val %RMSE: 1.32%
+
+--- Activation: TANH ---
+  Arch: H16        | LR: 0.01   | Epochs to Converge: 28   | Val RMSE: 0.0814 | Val %RMSE: 1.02%
+  Arch: H16        | LR: 0.05   | Epochs to Converge: 18   | Val RMSE: 0.0868 | Val %RMSE: 1.09%
+  Arch: H16        | LR: 0.1    | Epochs to Converge: 58   | Val RMSE: 0.0989 | Val %RMSE: 1.24%
+  Arch: H16-8      | LR: 0.01   | Epochs to Converge: 19   | Val RMSE: 0.0765 | Val %RMSE: 0.96%
+  Arch: H16-8      | LR: 0.05   | Epochs to Converge: 41   | Val RMSE: 0.1192 | Val %RMSE: 1.50%
+  Arch: H16-8      | LR: 0.1    | Epochs to Converge: 128  | Val RMSE: 0.1024 | Val %RMSE: 1.28%
+  Arch: H32        | LR: 0.01   | Epochs to Converge: 27   | Val RMSE: 0.0848 | Val %RMSE: 1.06%
+  Arch: H32        | LR: 0.05   | Epochs to Converge: 15   | Val RMSE: 0.0924 | Val %RMSE: 1.16%
+  Arch: H32        | LR: 0.1    | Epochs to Converge: 27   | Val RMSE: 0.0739 | Val %RMSE: 0.93%
+  Arch: H32-16     | LR: 0.01   | Epochs to Converge: 13   | Val RMSE: 0.0784 | Val %RMSE: 0.98%
+  Arch: H32-16     | LR: 0.05   | Epochs to Converge: 37   | Val RMSE: 0.0928 | Val %RMSE: 1.17%
+  Arch: H32-16     | LR: 0.1    | Epochs to Converge: 264  | Val RMSE: 0.1139 | Val %RMSE: 1.43%
+  Arch: H4         | LR: 0.01   | Epochs to Converge: 17   | Val RMSE: 0.0740 | Val %RMSE: 0.93%
+  Arch: H4         | LR: 0.05   | Epochs to Converge: 16   | Val RMSE: 0.0718 | Val %RMSE: 0.90%
+  Arch: H4         | LR: 0.1    | Epochs to Converge: 32   | Val RMSE: 0.0748 | Val %RMSE: 0.94%
+  Arch: H8         | LR: 0.01   | Epochs to Converge: 22   | Val RMSE: 0.0732 | Val %RMSE: 0.92%
+  Arch: H8         | LR: 0.05   | Epochs to Converge: 18   | Val RMSE: 0.0795 | Val %RMSE: 1.00%
+  Arch: H8         | LR: 0.1    | Epochs to Converge: 51   | Val RMSE: 0.1500 | Val %RMSE: 1.88%
+  Arch: H8-4       | LR: 0.01   | Epochs to Converge: 26   | Val RMSE: 0.0740 | Val %RMSE: 0.93%
+  Arch: H8-4       | LR: 0.05   | Epochs to Converge: 63   | Val RMSE: 0.0993 | Val %RMSE: 1.25%
+  Arch: H8-4       | LR: 0.1    | Epochs to Converge: 102  | Val RMSE: 0.0957 | Val %RMSE: 1.20%
+
+--- Best Architecture (Cross-Validation) ---
+  Best Config: H4_logistic_LR0.1
+  Epochs to Converge: 17
+  Test RMSE: 0.0655 | Test %RMSE: 0.82%

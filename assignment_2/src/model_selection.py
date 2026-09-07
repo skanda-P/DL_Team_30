@@ -4,25 +4,25 @@ from utils.metrics import classification_metrics, rmse, percent_rmse
 
 def architecture_grid(input_dim, output_dim, hidden_layer_size_options,
                        hidden_activation="logistic", output_activation="logistic",
-                       learning_rates=(0.05,), epochs_list=(500,),
-                       stopping_threshold=None):
+                       learning_rates=(0.01, 0.05, 0.1), max_epochs=2000,
+                       stopping_threshold=0.0001, patience=5):
     # Generates configuration dictionaries for model sweeping
     configs = []
     for hidden_sizes in hidden_layer_size_options:
         hidden_str = "-".join(str(s) for s in hidden_sizes)
         for lr in learning_rates:
-            for ep in epochs_list:
-                layer_sizes = [input_dim] + list(hidden_sizes) + [output_dim]
-                cfg_id = f"H{hidden_str}_{hidden_activation}_LR{lr}_EP{ep}"
-                configs.append({
-                    "layer_sizes": layer_sizes,
-                    "hidden_activation": hidden_activation,
-                    "output_activation": output_activation,
-                    "learning_rate": lr,
-                    "epochs": ep,
-                    "stopping_threshold": stopping_threshold,
-                    "config_id": cfg_id
-                })
+            layer_sizes = [input_dim] + list(hidden_sizes) + [output_dim]
+            cfg_id = f"H{hidden_str}_{hidden_activation}_LR{lr}"
+            configs.append({
+                "layer_sizes": layer_sizes,
+                "hidden_activation": hidden_activation,
+                "output_activation": output_activation,
+                "learning_rate": lr,
+                "epochs": max_epochs,
+                "stopping_threshold": stopping_threshold,
+                "patience": patience,
+                "config_id": cfg_id
+            })
     return configs
 
 
@@ -36,7 +36,8 @@ def run_sweep(X_train, y_train, X_val, y_val, architectures, num_classes):
             output_activation=cfg["output_activation"],
             learning_rate=cfg["learning_rate"],
             epochs=cfg["epochs"],
-            stopping_threshold=cfg["stopping_threshold"],
+            stopping_threshold=cfg.get("stopping_threshold"),
+            patience=cfg.get("patience", 5),
             seed=42
         )
         model.fit(X_train, y_train)
@@ -48,7 +49,7 @@ def run_sweep(X_train, y_train, X_val, y_val, architectures, num_classes):
             "config": cfg,
             "model": model,
             "val_metrics": val_metrics,
-            "epochs_run": len(model.errors)
+            "epochs_run": model.epochs_run
         })
 
     return sweep_results
@@ -69,7 +70,8 @@ def run_regression_sweep(X_train, y_train, X_val, y_val, architectures):
             output_activation=cfg["output_activation"],
             learning_rate=cfg["learning_rate"],
             epochs=cfg["epochs"],
-            stopping_threshold=cfg["stopping_threshold"],
+            stopping_threshold=cfg.get("stopping_threshold"),
+            patience=cfg.get("patience", 5),
             seed=42
         )
         model.fit(X_train, y_train)
@@ -94,7 +96,7 @@ def run_regression_sweep(X_train, y_train, X_val, y_val, architectures):
             "model": model,
             "train_metrics": train_metrics,
             "val_metrics": val_metrics,
-            "epochs_run": len(model.errors)
+            "epochs_run": model.epochs_run
         })
 
     return sweep_results 

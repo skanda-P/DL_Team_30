@@ -15,9 +15,11 @@
 #   - Loads the univariate and bivariate datasets and calls run_dataset for each.
 
 import os
+import shutil
 import numpy as np
 
 import model_selection
+import compare_results
 from utils.data_utils import load_regression_csv, three_way_split
 from utils.metrics import rmse, percent_rmse
 from utils.plotting import (
@@ -40,13 +42,14 @@ SEED = 42
 # Dataset1 (univariate): FCNN with a single hidden layer only, per the assignment spec.
 # Dataset2 (bivariate): both one- and two-hidden-layer architectures are tried.
 HIDDEN_LAYER_OPTIONS = {
-    "Univariate": [(4,), (8,), (16,), (32,)],
-    "Bivariate": [(4,), (8,), (16,), (8, 4), (16, 8), (32, 16)],
+    "Univariate": [(2,), (4,), (8,), (16,), (32,)],
+    "Bivariate": [(4,), (8,), (16,), (32,), (8, 4), (16, 8), (32, 16)],
 }
 ACTIVATIONS = ["logistic", "tanh"]
-LEARNING_RATES = [0.05, 0.1]
-EPOCHS_LIST = [300, 600]
-STOPPING_THRESHOLD = 1e-5
+LEARNING_RATES = [0.01, 0.05, 0.1]
+MAX_EPOCHS = 2000
+STOPPING_THRESHOLD = 0.0001
+PATIENCE = 5
 SELECTION_METRIC = "rmse"
 
 
@@ -69,7 +72,13 @@ def save_metrics_file(filepath, dataset_name, cfg, metrics, epochs_run):
         )
         f.write("-" * 40 + "\n")
         for key, value in metrics.items():
-            f.write(f"{key}: {value}\n")
+            if isinstance(value, (float, np.floating)):
+                f.write(f"{key}: {value:.4f}\n")
+            elif isinstance(value, np.ndarray) and value.dtype.kind == "f":
+                formatted_arr = "[" + " ".join(f"{v:.4f}" for v in value) + "]"
+                f.write(f"{key}: {formatted_arr}\n")
+            else:
+                f.write(f"{key}: {value}\n")
 
 
 def save_sweep_metrics_file(filepath, dataset_name, cfg, train_metrics, val_metrics, epochs_run):
@@ -85,10 +94,16 @@ def save_sweep_metrics_file(filepath, dataset_name, cfg, train_metrics, val_metr
         f.write("-" * 40 + "\n")
         f.write("[train]\n")
         for key, value in train_metrics.items():
-            f.write(f"train_{key}: {value}\n")
+            if isinstance(value, (float, np.floating)):
+                f.write(f"train_{key}: {value:.4f}\n")
+            else:
+                f.write(f"train_{key}: {value}\n")
         f.write("[validation]\n")
         for key, value in val_metrics.items():
-            f.write(f"{key}: {value}\n")
+            if isinstance(value, (float, np.floating)):
+                f.write(f"{key}: {value:.4f}\n")
+            else:
+                f.write(f"{key}: {value}\n")
 
 
 def _plot_fit(X, y_true, y_pred, dim, title, filename):
@@ -112,13 +127,12 @@ def run_dataset(dataset_name, X, y, dim, hidden_layer_size_options):
     print(f"Running Regression: {dataset_name}")
     print(f"==========================================")
 
-    # 60/20/20 train/val/test split (plain, non-stratified — targets are continuous)
+    # 60/20/20 train/val/test split (pure random, no stratification for continuous targets)
     X_train, X_val, X_test, y_train, y_val, y_test = three_way_split(
         X, y, train_ratio=TRAIN_RATIO, val_ratio=VAL_RATIO, seed=SEED
     )
 
-    # Generate full architecture sweep grid across activations.
-    # output_dim=1, output_activation="linear" — regression uses a linear output unit.
+    # Generate full architecture sweep grid across activations
     architectures = []
     for act in ACTIVATIONS:
         architectures.extend(
@@ -129,8 +143,9 @@ def run_dataset(dataset_name, X, y, dim, hidden_layer_size_options):
                 hidden_activation=act,
                 output_activation="linear",
                 learning_rates=LEARNING_RATES,
-                epochs_list=EPOCHS_LIST,
+                max_epochs=MAX_EPOCHS,
                 stopping_threshold=STOPPING_THRESHOLD,
+                patience=PATIENCE,
             )
         )
 
@@ -142,10 +157,10 @@ def run_dataset(dataset_name, X, y, dim, hidden_layer_size_options):
     )
 
     # Save metrics for every model in the sweep
-    sweep_base_dir = os.path.abspath(os.path.join("results", dataset_name, "sweep"))
+    results_base_dir = os.path.abspath(os.path.join("results", dataset_name))
     for res in sweep_results:
         cfg = res["config"]
-        cfg_dir = os.path.join(sweep_base_dir, cfg["config_id"])
+        cfg_dir = os.path.join(results_base_dir, cfg["config_id"])
         metrics_file = os.path.join(cfg_dir, "evaluation_metrics.txt")
         save_sweep_metrics_file(
             metrics_file, dataset_name, cfg, res["train_metrics"], res["val_metrics"], res["epochs_run"]
@@ -173,6 +188,8 @@ def run_dataset(dataset_name, X, y, dim, hidden_layer_size_options):
           f"(%RMSE: {best_test_metrics['percent_rmse']:.2f}%)")
 
     best_dir = os.path.abspath(os.path.join("results", dataset_name, "best"))
+    if os.path.exists(best_dir):
+        shutil.rmtree(best_dir)
     os.makedirs(best_dir, exist_ok=True)
 
     # Save train, validation, and test metric files for best model
@@ -262,28 +279,8 @@ def main():
         hidden_layer_size_options=HIDDEN_LAYER_OPTIONS["Bivariate"],
     )
 
-    # Write summary file
-    results_dir = os.path.abspath("results")
-    os.makedirs(results_dir, exist_ok=True)
-    summary_path = os.path.join(results_dir, "regression_summary.txt")
-
-    with open(summary_path, "w") as f:
-        f.write("=== ASSIGNMENT 2 REGRESSION SUMMARY ===\n\n")
-        for s in [uni_summary, bi_summary]:
-            f.write(f"Dataset: {s['dataset_name']}\n")
-            f.write(f"Best Config ID: {s['best_config']['config_id']}\n")
-            f.write(f"Layer Sizes: {s['best_config']['layer_sizes']}\n")
-            f.write(f"Activation: {s['best_config']['hidden_activation']}\n")
-            f.write(f"Epochs Run: {s['epochs_run']} / {s['best_config']['epochs']}\n")
-            f.write(f"Train RMSE: {s['best_train_metrics']['rmse']:.4f} "
-                    f"(%RMSE: {s['best_train_metrics']['percent_rmse']:.2f}%)\n")
-            f.write(f"Validation RMSE: {s['best_val_metrics']['rmse']:.4f} "
-                    f"(%RMSE: {s['best_val_metrics']['percent_rmse']:.2f}%)\n")
-            f.write(f"Test RMSE: {s['best_test_metrics']['rmse']:.4f} "
-                    f"(%RMSE: {s['best_test_metrics']['percent_rmse']:.2f}%)\n")
-            f.write("-" * 40 + "\n")
-
-    print(f"\nSaved overall summary to {summary_path}")
+    # Generate overall comparison summary report following Assignment 1 pattern
+    compare_results.generate_comparison_report()
 
 
 if __name__ == "__main__":

@@ -107,9 +107,10 @@ class FCNN:
         hidden_activation="logistic",
         output_activation="logistic",
         learning_rate=0.01,
-        epochs=1000,
+        epochs=2000,
         seed=None,
-        stopping_threshold=None,
+        stopping_threshold=0.0001,
+        patience=5,
     ):
 
         if not isinstance(layer_sizes, (list, tuple)):
@@ -154,6 +155,9 @@ class FCNN:
                 "stopping_threshold must be non-negative or None."
             )
 
+        if patience is not None and patience <= 0:
+            raise ValueError("patience must be a positive integer or None.")
+
 
         self.layer_sizes = list(layer_sizes)
 
@@ -164,6 +168,10 @@ class FCNN:
         self.epochs = int(epochs)
         self.seed = seed
         self.stopping_threshold = stopping_threshold
+        self.patience = patience if patience is not None else 1
+
+        self.errors = []
+        self.epochs_run = 0
 
         
         (
@@ -539,17 +547,12 @@ class FCNN:
         """
         Train the FCNN using pattern-mode stochastic gradient descent.
 
-        For every epoch:
-
-            1. Shuffle all training examples.
-            2. Present one example.
-            3. Forward computation.
-            4. Calculate instantaneous error.
-            5. Backpropagate.
-            6. Immediately update weights.
-            7. Repeat until every example has been presented.
-            8. Calculate average epoch error.
-            9. Check stopping criterion.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training input patterns.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            Target outputs or class labels.
 
         Returns
         -------
@@ -617,12 +620,12 @@ class FCNN:
                 "Training data cannot be empty."
             )
 
-
         self.errors = []
         self.is_fitted = False
+        self.epochs_run = 0
 
         previous_average_error = None
-
+        patience_counter = 0
 
         for epoch in range(self.epochs):
 
@@ -632,7 +635,6 @@ class FCNN:
             total_error = 0.0
 
             # Pattern-mode SGD
-
             for index in indices:
 
                 x_n = X[index]
@@ -663,32 +665,29 @@ class FCNN:
                 # Immediate weight update.
                 self._update_weights(gradients)
 
-           
             # Average error for the completed epoch
-
             average_error = total_error / n_samples
-
             self.errors.append(average_error)
 
-            # Stopping criterion
-            #
-            # |E_av(m) - E_av(m-1)| < threshold
-
+            # Convergence / stopping criterion check
             if (
                 self.stopping_threshold is not None
                 and previous_average_error is not None
             ):
-
                 change_in_error = abs(
-                    average_error
-                    - previous_average_error
+                    average_error - previous_average_error
                 )
 
                 if change_in_error < self.stopping_threshold:
-                    break
+                    patience_counter += 1
+                    if patience_counter >= self.patience:
+                        break
+                else:
+                    patience_counter = 0
 
             previous_average_error = average_error
 
+        self.epochs_run = len(self.errors)
         self.is_fitted = True
 
         return self

@@ -6,11 +6,20 @@ from perceptron import Perceptron
 
 class OneVsOneClassifier:
 
-    def __init__(self, activation="logistic", learning_rate=0.01, epochs=1000):
+    def __init__(
+        self,
+        activation="logistic",
+        learning_rate=0.01,
+        epochs=2000,
+        stopping_threshold=0.0001,
+        patience=5,
+    ):
 
         self.activation = activation
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.stopping_threshold = stopping_threshold
+        self.patience = patience
 
         self.classifiers = {}
         self.classes_ = None
@@ -79,7 +88,9 @@ class OneVsOneClassifier:
             model = Perceptron(
                 learning_rate=self.learning_rate,
                 epochs=self.epochs,
-                activation=self.activation
+                activation=self.activation,
+                stopping_threshold=self.stopping_threshold,
+                patience=self.patience,
             )
 
             # Train on this class pair
