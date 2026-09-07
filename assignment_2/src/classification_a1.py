@@ -5,6 +5,7 @@ from multiclass import OneVsOneClassifier
 from utils.data_utils import load_LS_data, load_nls_data, stratified_three_way_split
 from utils.metrics import classification_metrics
 from utils.plotting import plot_decision_regions, plot_error_vs_epochs
+from utils.training_config import MAX_EPOCHS, PATIENCE, STOPPING_THRESHOLD
 
 
 DATA_DIR = "data"
@@ -16,9 +17,6 @@ SEED = 42
 
 ACTIVATIONS = ["logistic", "tanh"]
 LEARNING_RATES = [0.001, 0.01, 0.05, 0.1, 0.2]
-MAX_EPOCHS = 2000
-STOPPING_THRESHOLD = 0.0001
-PATIENCE = 5
 SELECTION_METRIC = "overall_accuracy"
 
 
@@ -96,7 +94,13 @@ def run_dataset(dataset_name, X, y):
             )
 
     # Select best model on validation split
-    best = max(sweep_results, key=lambda entry: entry["val_metrics"][SELECTION_METRIC])
+    best = max(
+        sweep_results,
+        key=lambda entry: (
+            entry["val_metrics"][SELECTION_METRIC],
+            -entry["epochs_run"],
+        ),
+    )
     best_cfg = best["config"]
     best_clf = best["model"]
     best_val_metrics = best["val_metrics"]

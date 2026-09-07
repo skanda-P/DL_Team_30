@@ -6,6 +6,7 @@ import model_selection
 import compare_results
 from utils.data_utils import load_LS_data, load_nls_data, stratified_three_way_split
 from utils.metrics import classification_metrics, print_classification_report
+from utils.training_config import MAX_EPOCHS, PATIENCE, STOPPING_THRESHOLD
 from utils.plotting import (
     plot_decision_regions,
     plot_error_vs_epochs,
@@ -26,9 +27,6 @@ HIDDEN_LAYER_OPTIONS = {
 }
 ACTIVATIONS = ["logistic", "tanh"]
 LEARNING_RATES = [0.01, 0.05, 0.1]
-MAX_EPOCHS = 2000
-STOPPING_THRESHOLD = 0.0001
-PATIENCE = 5
 SELECTION_METRIC = "overall_accuracy"
 
 

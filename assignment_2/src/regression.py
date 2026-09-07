@@ -22,6 +22,7 @@ import model_selection
 import compare_results
 from utils.data_utils import load_regression_csv, three_way_split
 from utils.metrics import rmse, percent_rmse
+from utils.training_config import MAX_EPOCHS, PATIENCE, STOPPING_THRESHOLD
 from utils.plotting import (
     plot_error_vs_epochs,
     plot_node_output_surface,
@@ -47,9 +48,6 @@ HIDDEN_LAYER_OPTIONS = {
 }
 ACTIVATIONS = ["logistic", "tanh"]
 LEARNING_RATES = [0.01, 0.05, 0.1]
-MAX_EPOCHS = 2000
-STOPPING_THRESHOLD = 0.0001
-PATIENCE = 5
 SELECTION_METRIC = "rmse"
 
 

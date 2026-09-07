@@ -56,8 +56,14 @@ def run_sweep(X_train, y_train, X_val, y_val, architectures, num_classes):
 
 
 def select_best(sweep_results, metric_key="overall_accuracy"):
-    # Selects the best performing model based on the chosen validation metric
-    return max(sweep_results, key=lambda entry: entry["val_metrics"][metric_key])
+    # Prefer validation performance, then faster convergence for ties.
+    return max(
+        sweep_results,
+        key=lambda entry: (
+            entry["val_metrics"][metric_key],
+            -entry["epochs_run"],
+        ),
+    )
 
 def run_regression_sweep(X_train, y_train, X_val, y_val, architectures):
     # Trains each regression architecture on the train split and evaluates
@@ -103,5 +109,11 @@ def run_regression_sweep(X_train, y_train, X_val, y_val, architectures):
 
 
 def select_best_regression(sweep_results, metric_key="rmse"):
-    # Lower RMSE / %RMSE is better, unlike the classification metrics above.
-    return min(sweep_results, key=lambda entry: entry["val_metrics"][metric_key])
+    # Prefer lower validation error, then faster convergence for ties.
+    return min(
+        sweep_results,
+        key=lambda entry: (
+            entry["val_metrics"][metric_key],
+            entry["epochs_run"],
+        ),
+    )

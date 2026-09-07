@@ -7,6 +7,7 @@ from utils.metrics import percent_rmse, rmse
 from utils.plotting import (
     plot_error_vs_epochs, plot_regression_1d, plot_regression_2d, plot_target_vs_model_scatter
 )
+from utils.training_config import MAX_EPOCHS, PATIENCE, STOPPING_THRESHOLD
 
 
 DATA_DIR = "data"
@@ -19,9 +20,6 @@ TRAIN_RATIO, VAL_RATIO = 0.6, 0.2
 SEED = 42
 
 LEARNING_RATES = [0.001, 0.01, 0.05, 0.1]
-MAX_EPOCHS = 2000
-STOPPING_THRESHOLD = 0.0001
-PATIENCE = 5
 
 
 def save_metrics_file(filepath, dataset_name, cfg, metrics, epochs_run):
@@ -91,7 +89,13 @@ def run_dataset(dataset_name, path, dim):
         )
 
     # Select best model on validation split (lowest RMSE)
-    best = min(sweep_results, key=lambda entry: entry["val_metrics"]["rmse"])
+    best = min(
+        sweep_results,
+        key=lambda entry: (
+            entry["val_metrics"]["rmse"],
+            entry["epochs_run"],
+        ),
+    )
     best_cfg = best["config"]
     best_model = best["model"]
     best_val_metrics = best["val_metrics"]

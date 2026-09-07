@@ -1,9 +1,12 @@
 import os
 import glob
-import shutil
 
 
-def generate_comparison_report(results_dir="results", out_file=None):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_RESULTS_DIR = os.path.join(BASE_DIR, "results")
+
+
+def generate_comparison_report(results_dir=DEFAULT_RESULTS_DIR, out_file=None):
     search_pattern = os.path.join(results_dir, "**", "evaluation_metrics*.txt")
     filepaths = glob.glob(search_pattern, recursive=True)
 
@@ -227,15 +230,6 @@ def generate_comparison_report(results_dir="results", out_file=None):
     with open(rep_path, "w") as f:
         f.write(report_text)
 
-    # For top-level compatibility if out_file is different
-    root_rep = "results_comparison_report.txt"
-    if os.path.abspath(out_file) != os.path.abspath(root_rep):
-        try:
-            with open(root_rep, "w") as f:
-                f.write(report_text)
-        except OSError:
-            pass
-
     print(report_text)
     print(f"Comparison report successfully generated: {out_file}")
     print(f"Summary saved to: {rep_path}")
@@ -243,7 +237,7 @@ def generate_comparison_report(results_dir="results", out_file=None):
 
 def generate_a1_report(a1_results_dir=None, out_file=None):
     if a1_results_dir is None:
-        a1_results_dir = os.path.join("results", "a1")
+        a1_results_dir = os.path.join(DEFAULT_RESULTS_DIR, "a1")
 
     search_pattern = os.path.join(a1_results_dir, "**", "evaluation_metrics*.txt")
     filepaths = glob.glob(search_pattern, recursive=True)
@@ -449,14 +443,6 @@ def generate_a1_report(a1_results_dir=None, out_file=None):
     res_root_file = os.path.join(os.path.dirname(a1_results_dir), "results_comparison_report_a1.txt")
     with open(res_root_file, "w") as f:
         f.write(report_text)
-
-    # Remove any old results_comparison_report_a1.txt sitting in src/
-    stale_src_file = "results_comparison_report_a1.txt"
-    if os.path.exists(stale_src_file):
-        try:
-            os.remove(stale_src_file)
-        except OSError:
-            pass
 
     print(report_text)
     print(f"Assignment 1 report successfully generated: {out_file}")
