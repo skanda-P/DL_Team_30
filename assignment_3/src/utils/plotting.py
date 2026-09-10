@@ -4,7 +4,9 @@ try:
     from mpl_toolkits.mplot3d import Axes3D
 except ImportError:
     raise ImportError("matplotlib is required. Install it with: pip install matplotlib")
+import os
 import numpy as np
+
 
 
 _CLASS_COLORS = plt.get_cmap('tab10').colors
@@ -168,3 +170,129 @@ def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output",
 
     plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
+
+
+def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training Error vs. Epochs",
+                                      filename="superimposed_error_vs_epochs.png", log_scale=False):
+    """
+    Plots and superimposes average training error vs epochs for multiple optimizers.
+    Required for Presentation of Results (item 2).
+    """
+    plt.figure(figsize=(10, 6))
+
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2']
+    linestyles = ['-', '--', '-.', ':', '-', '--', '-.']
+    markers = ['o', 's', '^', 'v', 'D', 'p', '*']
+
+    for i, (opt_name, losses) in enumerate(optimizer_losses.items()):
+        color = colors[i % len(colors)]
+        ls = linestyles[i % len(linestyles)]
+        marker = markers[i % len(markers)]
+        epochs = list(range(1, len(losses) + 1))
+        # Plot full curve
+        plt.plot(epochs, losses, label=f"{opt_name} (converged: {len(losses)} ep)",
+                 color=color, linestyle=ls, linewidth=1.8, alpha=0.9)
+        # Highlight convergence endpoint
+        if len(losses) > 0:
+            plt.scatter([epochs[-1]], [losses[-1]], color=color, s=50, marker=marker, zorder=5)
+
+    plt.xlabel('Epochs', fontsize=12, fontweight='bold')
+    plt.ylabel('Average Cross-Entropy Error', fontsize=12, fontweight='bold')
+    if log_scale:
+        plt.yscale('log')
+        plt.ylabel('Average Cross-Entropy Error (log scale)', fontsize=12, fontweight='bold')
+
+    plt.title(title, fontsize=14, pad=15, fontweight='bold')
+    plt.legend(loc="upper right", fontsize=10, framealpha=0.9)
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
+
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+    plt.savefig(filename, dpi=200, bbox_inches='tight')
+    plt.close()
+
+
+def plot_confusion_matrix_heatmap(cm, class_names=None, title="Confusion Matrix",
+                                  filename="confusion_matrix.png"):
+    """
+    Plots a heatmap of the confusion matrix with numerical counts and percentages.
+    Required for Presentation of Results (item 4).
+    """
+    cm = np.asarray(cm)
+    num_classes = cm.shape[0]
+    if class_names is None:
+        class_names = [f"Class {i}" for i in range(num_classes)]
+
+    plt.figure(figsize=(7, 6))
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title(title, fontsize=14, pad=15, fontweight='bold')
+    plt.colorbar(fraction=0.046, pad=0.04)
+
+    tick_marks = np.arange(num_classes)
+    plt.xticks(tick_marks, class_names, fontsize=11)
+    plt.yticks(tick_marks, class_names, fontsize=11)
+
+    thresh = cm.max() / 2.0
+    total = np.sum(cm)
+    for i in range(num_classes):
+        for j in range(num_classes):
+            val = cm[i, j]
+            pct = (val / total * 100.0) if total > 0 else 0.0
+            text_color = "white" if val > thresh else "black"
+            plt.text(j, i, f"{val}\n({pct:.1f}%)",
+                     horizontalalignment="center",
+                     verticalalignment="center",
+                     color=text_color, fontsize=10, fontweight='bold')
+
+    plt.ylabel('True Label', fontsize=12, fontweight='bold')
+    plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
+    plt.tight_layout()
+
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+    plt.savefig(filename, dpi=200, bbox_inches='tight')
+    plt.close()
+
+
+def plot_convergence_bar_chart(epochs_summary, title="Convergence Epochs Across Optimizers",
+                               filename="convergence_epochs_bar.png"):
+    """
+    Grouped bar chart comparing epochs to convergence across architectures.
+    Gracefully scales layout and legend for 9 architectures and 3 activations.
+    """
+    configurations = list(epochs_summary.keys())
+    if not configurations:
+        return
+    first_config = configurations[0]
+    optimizers = list(epochs_summary[first_config].keys())
+
+    x = np.arange(len(optimizers))
+    num_configs = len(configurations)
+
+    fig_w = max(12, len(optimizers) * 2.0)
+    fig_h = 7
+    plt.figure(figsize=(fig_w, fig_h))
+
+    width = 0.85 / max(num_configs, 1)
+
+    for i, cfg in enumerate(configurations):
+        values = [epochs_summary[cfg].get(opt, 0) for opt in optimizers]
+        offset = (i - num_configs / 2 + 0.5) * width
+        plt.bar(x + offset, values, width, label=cfg)
+
+    plt.xlabel('Optimizer', fontsize=12, fontweight='bold')
+    plt.ylabel('Epochs to Convergence', fontsize=12, fontweight='bold')
+    plt.title(title, fontsize=14, pad=15, fontweight='bold')
+    plt.xticks(x, optimizers, rotation=15, fontsize=11)
+
+    if num_configs > 6:
+        plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8, ncol=2 if num_configs > 15 else 1)
+    else:
+        plt.legend(fontsize=10)
+
+    plt.grid(axis='y', linestyle='--', alpha=0.6)
+    plt.tight_layout()
+
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+    plt.savefig(filename, dpi=200, bbox_inches='tight')
+    plt.close()
+
