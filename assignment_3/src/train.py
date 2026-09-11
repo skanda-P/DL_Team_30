@@ -15,7 +15,7 @@ if CURRENT_DIR not in sys.path:
 DEFAULT_RESULTS_DIR = os.path.join(CURRENT_DIR, "results")
 
 from data_loader import get_data_tensors
-from models import build_model, ARCHITECTURES, ACTIVATION_CHOICES
+from models import build_model, ARCHITECTURES, ARCH_GROUPS, ACTIVATION_CHOICES
 from utils.metrics import classification_metrics, print_classification_report
 from utils.plotting import plot_error_vs_epochs
 from utils.training_config import MAX_EPOCHS, STOPPING_THRESHOLD, PATIENCE
@@ -212,37 +212,44 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
     # Save model weights
     torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
 
-    # Save loss history
-    with open(os.path.join(save_dir, "loss_history.json"), "w") as f:
-        json.dump({
-            "arch": arch_name,
-            "activation": activation,
-            "optimizer": optimizer_key,
-            "display_name": display_name,
-            "epochs_converged": epochs_run,
-            "converged_by_threshold": converged,
-            "elapsed_time_sec": elapsed_time,
-            "losses": epoch_losses
-        }, f, indent=2)
+    # Save loss history in text format
+    loss_lines = [f"Epoch {ep:4d}: Loss = {l:.6f}" for ep, l in enumerate(epoch_losses, 1)]
+    with open(os.path.join(save_dir, "loss_history.txt"), "w") as f:
+        f.write(f"Architecture:          {arch_name}\n")
+        f.write(f"Activation Function:   {activation}\n")
+        f.write(f"Optimizer:             {display_name}\n")
+        f.write(f"Epochs to Converge:    {epochs_run}\n")
+        f.write(f"Stopped by Threshold:  {'Yes' if converged else 'No (max epochs)'}\n")
+        f.write(f"Elapsed Time (s):      {elapsed_time:.2f}\n")
+        f.write("\nEpoch Training Losses:\n")
+        f.write("----------------------\n")
+        f.write("\n".join(loss_lines) + "\n")
 
-    # Save metrics
-    metrics_summary = {
-        "arch": arch_name,
-        "activation": activation,
-        "optimizer": optimizer_key,
-        "display_name": display_name,
-        "epochs_run": epochs_run,
-        "converged_by_threshold": converged,
-        "elapsed_time_sec": elapsed_time,
-        "train_loss": float(train_loss),
-        "train_accuracy": float(train_acc),
-        "val_loss": float(val_loss),
-        "val_accuracy": float(val_acc),
-        "macro_f1": float(val_metrics["macro_f_measure"]),
-        "micro_f1": float(val_metrics["micro_f_measure"])
-    }
-    with open(os.path.join(save_dir, "metrics.json"), "w") as f:
-        json.dump(metrics_summary, f, indent=2)
+    # Save evaluation metrics in text format
+    with open(os.path.join(save_dir, "metrics.txt"), "w") as f:
+        f.write("======================================================================\n")
+        f.write("                       MODEL EVALUATION METRICS                       \n")
+        f.write("======================================================================\n\n")
+        f.write(f"Architecture:              {arch_name}\n")
+        f.write(f"Activation Function:       {activation}\n")
+        f.write(f"Optimizer:                 {display_name}\n")
+        f.write(f"Epochs to Converge:        {epochs_run}\n")
+        f.write(f"Stopped by Threshold:      {'Yes' if converged else 'No (max epochs)'}\n")
+        f.write(f"Elapsed Time:              {elapsed_time:.2f} seconds\n\n")
+        f.write("--- Performance Summary ---\n")
+        f.write(f"Training Loss:             {train_loss:.6f}\n")
+        f.write(f"Training Accuracy:         {train_acc * 100:.2f}%\n")
+        f.write(f"Validation Loss:           {val_loss:.6f}\n")
+        f.write(f"Validation Accuracy:       {val_acc * 100:.2f}%\n")
+        f.write(f"Validation Macro F1:       {val_metrics['macro_f_measure'] * 100:.2f}%\n")
+        f.write(f"Validation Micro F1:       {val_metrics['micro_f_measure'] * 100:.2f}%\n\n")
+        f.write("--- Per-Class Metrics (Validation Split) ---\n")
+        for c_idx, c_name in idx_to_class.items():
+            p_val = val_metrics["class_precision"][c_idx]
+            r_val = val_metrics["class_recall"][c_idx]
+            f_val = val_metrics["class_f_measure"][c_idx]
+            f.write(f"Digit '{c_name}': Precision = {p_val:.4f}, Recall = {r_val:.4f}, F1 = {f_val:.4f}\n")
+        f.write("======================================================================\n")
 
     # Plot single error vs epochs
     plot_error_vs_epochs(
@@ -274,12 +281,12 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
 
 def main():
     parser = argparse.ArgumentParser(description="Train FCNN with various optimizers and activations.")
-    parser.add_argument("--arch", type=str, default="arch1", choices=list(ARCHITECTURES.keys()),
-                        help="Architecture to train")
-    parser.add_argument("--activation", type=str, nargs="+", default=["relu"],
-                        help="Activation function(s) or 'all' (choices: relu, tanh, sigmoid)")
-    parser.add_argument("--optimizer", type=str, default="adam",
-                        help="Optimizer to use ('all' to run all 7 optimizers)")
+    parser.add_argument("--arch", type=str, nargs="+", default=None,
+                        help="Architecture(s) to train: 'all', '3_layers', '4_layers', '5_layers', or specific arch keys (default: 'all')")
+    parser.add_argument("--activation", type=str, nargs="+", default=None,
+                        help="Activation function(s) or 'all' (choices: relu, tanh, sigmoid; default: 'all')")
+    parser.add_argument("--optimizer", type=str, nargs="+", default=None,
+                        help="Optimizer(s) to use or 'all' (choices: sgd, bgd, momentum, nag, adagrad, rmsprop, adam; default: 'all')")
     parser.add_argument("--data_dir", type=str, default=None, help="Path to data directory")
     parser.add_argument("--results_dir", type=str, default=DEFAULT_RESULTS_DIR, help="Directory to save results")
     parser.add_argument("--threshold", type=float, default=STOPPING_THRESHOLD,
@@ -297,35 +304,48 @@ def main():
 
     args = parser.parse_args()
 
-    opts_to_run = list(OPTIMIZERS.keys()) if args.optimizer == "all" else [args.optimizer]
-    acts_to_run = ACTIVATION_CHOICES if (args.activation is None or "all" in args.activation) else args.activation
+    if args.arch is None or "all" in args.arch:
+        archs_to_run = ARCH_GROUPS["all"]
+    else:
+        archs_to_run = []
+        for a in args.arch:
+            if a in ARCH_GROUPS:
+                archs_to_run.extend(ARCH_GROUPS[a])
+            else:
+                archs_to_run.append(a)
 
-    for act in acts_to_run:
-        arch_losses = {}
-        for opt_name in opts_to_run:
-            res = train_single_run(
-                arch_name=args.arch,
-                optimizer_key=opt_name,
-                activation=act,
-                data_dir=args.data_dir,
-                results_dir=args.results_dir,
-                stopping_threshold=args.threshold,
-                max_epochs=args.max_epochs,
-                patience=args.patience,
-                device=args.device,
-                seed=args.seed
-            )
-            arch_losses[res["display_name"]] = res["losses"]
+    opts_to_run = list(OPTIMIZERS.keys()) if (args.optimizer is None or "all" in args.optimizer) else args.optimizer
+    acts_to_run = list(ACTIVATION_CHOICES) if (args.activation is None or "all" in args.activation) else args.activation
 
-        if len(arch_losses) > 1:
-            from utils.plotting import plot_superimposed_error_vs_epochs
-            superimposed_path = os.path.join(args.results_dir, f"{args.arch}_{act}_superimposed_error.png")
-            plot_superimposed_error_vs_epochs(
-                optimizer_losses=arch_losses,
-                title=f"Average Training Error vs. Epochs: {args.arch.upper()} ({act.upper()})",
-                filename=superimposed_path
-            )
-            print(f"\n[+] Saved superimposed plot for {args.arch} ({act}) to: {superimposed_path}")
+    # If running multiple architectures or multiple optimizers, run full comparative suite
+    if len(archs_to_run) > 1 or len(opts_to_run) > 1 or len(acts_to_run) > 1:
+        from compare_optimizers import run_experiments
+        run_experiments(
+            architectures=archs_to_run,
+            activations=acts_to_run,
+            optimizers=opts_to_run,
+            data_dir=args.data_dir,
+            results_dir=args.results_dir,
+            stopping_threshold=args.threshold,
+            max_epochs=args.max_epochs,
+            patience=args.patience,
+            device=args.device,
+            seed=args.seed
+        )
+    else:
+        # Single individual model run
+        train_single_run(
+            arch_name=archs_to_run[0],
+            optimizer_key=opts_to_run[0],
+            activation=acts_to_run[0],
+            data_dir=args.data_dir,
+            results_dir=args.results_dir,
+            stopping_threshold=args.threshold,
+            max_epochs=args.max_epochs,
+            patience=args.patience,
+            device=args.device,
+            seed=args.seed
+        )
 
 
 if __name__ == "__main__":

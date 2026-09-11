@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+
+# Model weights and checkpoints
+*.pt
+*.pth
+*.ckpt
+*.bin
+**/models/
+!models.py
+!**/models.py
+
+# Results
+**/results/**

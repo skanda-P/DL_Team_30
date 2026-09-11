@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 **/__pycache__/
 *.py[cod]
 *.pyo
@@ -6,3 +6,12 @@
 .pytest_cache/
 **/results/**
 .venv/
+
+# PyTorch weights and model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.bin
+**/models/
+!models.py
+!**/models.py

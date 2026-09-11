@@ -99,16 +99,17 @@ ACTIVATION_CHOICES = ["relu", "tanh", "sigmoid"]
 
 def initialize_weights(model, seed=42):
     """
-    Deterministically initializes linear layer weights on CPU using Xavier (Glorot) Uniform:
-      W ~ U(-sqrt(6 / (fan_in + fan_out)), sqrt(6 / (fan_in + fan_out)))
+    Deterministically initializes linear layer weights on CPU using Xavier (Glorot) Normal:
+      W ~ N(0, std^2), where std = sqrt(2 / (fan_in + fan_out))
       b = 0
-    This ensures neutral, identical initialization suitable across all activations (ReLU, Tanh, Sigmoid).
+    This normal distribution balances variance across layers and is suitable across
+    all model architectures and activation functions (ReLU, Tanh, Sigmoid).
     """
     torch.manual_seed(seed)
 
     for m in model.modules():
         if isinstance(m, nn.Linear):
-            nn.init.xavier_uniform_(m.weight)
+            nn.init.xavier_normal_(m.weight)
             if m.bias is not None:
                 nn.init.zeros_(m.bias)
 
