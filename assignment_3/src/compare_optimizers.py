@@ -6,7 +6,6 @@ import argparse
 import numpy as np
 import torch
 
-# Ensure src/ is on sys.path
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
@@ -28,37 +27,18 @@ from utils.training_config import MAX_EPOCHS, STOPPING_THRESHOLD, PATIENCE
 def run_experiments(architectures=None, activations=None, optimizers=None, data_dir=None, results_dir=None,
                     stopping_threshold=STOPPING_THRESHOLD, max_epochs=MAX_EPOCHS,
                     patience=1, device=None, seed=42):
-    """
-    Executes the full experiment suite across architectures, activations, and optimizers.
-    Generates:
-      1. Superimposed error vs. epochs plots for each (architecture, activation) pair.
-      2. Comprehensive comparison table of convergence epochs, train/val accuracy across all activations.
-      3. Identification of best overall architecture & activation, evaluating test accuracy and confusion matrices.
-    """
     if results_dir is None:
         results_dir = DEFAULT_RESULTS_DIR
     if architectures is None:
         architectures = ARCH_GROUPS["all"]
     if activations is None:
         activations = list(ACTIVATION_CHOICES)
-
     if optimizers is None:
         optimizers = list(OPTIMIZERS.keys())
     if device is None:
         device = "cpu"
 
     os.makedirs(results_dir, exist_ok=True)
-
-    print("=" * 70)
-    print("CS601T Deep Learning Assignment 3 - Full Experiment Suite")
-    print(f"Architectures: {architectures}")
-    print(f"Activations:   {activations}")
-    print(f"Optimizers:    {optimizers}")
-    print(f"Total Runs:    {len(architectures) * len(activations) * len(optimizers)}")
-    print(f"Device:        {device}")
-    max_epochs_str = str(max_epochs) if max_epochs is not None else "Unlimited"
-    print(f"Max Epochs:    {max_epochs_str} | Patience: {patience}")
-    print("=" * 70)
 
     all_results = []
     epochs_summary = {}
@@ -68,9 +48,8 @@ def run_experiments(architectures=None, activations=None, optimizers=None, data_
     for arch_name in architectures:
         for act_name in activations:
             arch_act_losses = {}
-            config_label = f"{arch_name}_{act_name}"
+            config_label = arch_name if len(activations) == 1 else f"{arch_name}_{act_name}"
             epochs_summary[config_label] = {}
-            print(f"\n>>>>>>>>>>>> Architecture: {arch_name.upper()} | Activation: {act_name.upper()} <<<<<<<<<<<<")
 
             for opt_key in optimizers:
                 res = train_single_run(
@@ -95,57 +74,42 @@ def run_experiments(architectures=None, activations=None, optimizers=None, data_
                     best_val_acc = res["val_acc"]
                     best_run = res
 
-            # Presentation of Results #2: Superimposed error vs epochs plot for this (arch, act)
-            superimposed_plot_path = os.path.join(results_dir, f"{arch_name}_{act_name}_superimposed_error.png")
+            plot_filename = f"{arch_name}_superimposed_error.png" if len(activations) == 1 else f"{arch_name}_{act_name}_superimposed_error.png"
+            superimposed_plot_path = os.path.join(results_dir, plot_filename)
+            plot_title = f"Average Training Error vs. Epochs: {arch_name.upper()}" if len(activations) == 1 else f"Average Training Error vs. Epochs: {arch_name.upper()} ({act_name.upper()})"
             plot_superimposed_error_vs_epochs(
                 optimizer_losses=arch_act_losses,
-                title=f"Average Training Error vs. Epochs: {arch_name.upper()} ({act_name.upper()})",
+                title=plot_title,
                 filename=superimposed_plot_path
             )
-            print(f"[+] Saved superimposed plot to: {superimposed_plot_path}")
 
-    # Plot convergence comparison across configurations and optimizers
     if len(epochs_summary) > 0 and len(optimizers) > 0:
         bar_plot_path = os.path.join(results_dir, "convergence_comparison_bar.png")
         plot_convergence_bar_chart(
             epochs_summary=epochs_summary,
-            title="Epochs to Convergence by Architecture, Activation & Optimizer",
+            title="Epochs to Convergence Across Architectures and Optimizers (ReLU)",
             filename=bar_plot_path
         )
-        print(f"[+] Saved convergence bar chart to: {bar_plot_path}")
 
-    # Presentation of Results #1 & #3: Tabulate and compare
     summary_table_md, summary_table_csv = generate_comparison_tables(all_results)
-    
     with open(os.path.join(results_dir, "summary_table.md"), "w") as f:
         f.write(summary_table_md)
     with open(os.path.join(results_dir, "summary_table.csv"), "w") as f:
         f.write(summary_table_csv)
 
-    # Presentation of Results: Comprehensive Text Summary with controlled comparisons
     summary_text = generate_text_summary(all_results, best_run=best_run)
     summary_txt_path = os.path.join(results_dir, "summary.txt")
     with open(summary_txt_path, "w") as f:
         f.write(summary_text)
-    print(f"[+] Saved comprehensive summary text report to: {summary_txt_path}")
 
-    print("\n" + "=" * 80)
-    print("EXPERIMENT RESULTS SUMMARY TABLE")
-    print("=" * 80)
-    print(summary_table_md)
+    print("\n" + summary_table_md)
 
-    # Presentation of Results #4: Evaluate best architecture
     evaluate_best_architecture(best_run, data_dir=data_dir, results_dir=results_dir, device=device)
-
-    print("\n[+] Full experimentation suite completed successfully!")
 
     return all_results, best_run
 
 
 def generate_comparison_tables(results):
-    """
-    Generates Markdown and CSV formatted comparison tables.
-    """
     headers = [
         "Architecture", "Activation", "Optimizer", "Converged (Epochs)",
         "Stopped by Threshold?", "Train Loss", "Train Acc (%)",
@@ -179,19 +143,12 @@ def generate_comparison_tables(results):
 
 
 def generate_text_summary(results, best_run=None):
-    """
-    Generates a comprehensive plain-text summary report containing:
-      - Section 1: Full benchmark comparison table of all tested models with validation accuracies.
-      - Section 2: Activation function comparison keeping architecture & optimizer constant.
-      - Section 3: Model architecture comparison keeping activation & optimizer constant.
-      - Section 4: Gradient descent method (optimizer) comparison keeping architecture & activation constant.
-      - Section 5: Best performing model identification and evaluation.
-    """
     lines = []
     lines.append("=" * 115)
     lines.append("CS601T DEEP LEARNING ASSIGNMENT 3: OPTIMIZATION AND MODEL EVALUATION SUMMARY REPORT")
     lines.append("Team: DL_Team_30 (Group 30)")
     lines.append("Dataset: 5-Class MNIST Sub-dataset (Classes: ['3', '4', '5', '7', '8']) | Input Dim: 784 | Output Dim: 5")
+    lines.append("Activation Function: Standardized ReLU across all architectures and optimizers")
     lines.append("=" * 115)
     lines.append("")
 
@@ -199,9 +156,6 @@ def generate_text_summary(results, best_run=None):
         lines.append("No experiment results available.")
         return "\n".join(lines)
 
-    # -------------------------------------------------------------------------
-    # SECTION 1: OVERALL BENCHMARK COMPARISON TABLE
-    # -------------------------------------------------------------------------
     lines.append("=" * 115)
     lines.append("SECTION 1: OVERALL MODEL COMPARISON TABLE (ALL CONFIGURATIONS)")
     lines.append("=" * 115)
@@ -224,65 +178,62 @@ def generate_text_summary(results, best_run=None):
 
     lines.append("")
 
-    # -------------------------------------------------------------------------
-    # SECTION 2: ACTIVATION FUNCTION COMPARISON (KEEPING ARCH & OPTIMIZER CONSTANT)
-    # -------------------------------------------------------------------------
-    lines.append("=" * 115)
-    lines.append("SECTION 2: ACTIVATION FUNCTION COMPARISON (KEEPING ARCHITECTURE & OPTIMIZER CONSTANT)")
-    lines.append("=" * 115)
-    lines.append("Compares ReLU vs. Tanh vs. Sigmoid under identical model architectures and optimization algorithms.\n")
+    distinct_acts = set(r.get("activation", "relu").lower() for r in results)
+    sec_num = 2
 
-    act_groups = {}
-    for r in results:
-        key = (r["arch"], r["display_name"])
-        if key not in act_groups:
-            act_groups[key] = []
-        act_groups[key].append(r)
+    if len(distinct_acts) > 1:
+        lines.append("=" * 115)
+        lines.append(f"SECTION {sec_num}: ACTIVATION FUNCTION COMPARISON (KEEPING ARCHITECTURE & OPTIMIZER CONSTANT)")
+        lines.append("=" * 115)
+        lines.append("Compares activations under identical model architectures and optimization algorithms.\n")
+        sec_num += 1
 
-    act_stats = {}
-    for (arch, opt), group in sorted(act_groups.items()):
-        lines.append(f"-> Architecture: {arch} | Optimizer: {opt}")
-        best_g = max(group, key=lambda x: x["val_acc"])
-        for r in sorted(group, key=lambda x: x.get("activation", "")):
-            act = r.get("activation", "relu").upper()
-            val_acc = r["val_acc"] * 100
-            ep = r["epochs_run"]
-            t_loss = r["train_loss"]
-            v_loss = r["val_loss"]
-            tm = r["elapsed_time"]
-            lines.append(f"   [{act:<7}] Val Accuracy: {val_acc:6.2f}% | Epochs to Converge: {ep:4d} | Val Loss: {v_loss:.4f} | Train Loss: {t_loss:.4f} | Time: {tm:7.2f}s")
+        act_groups = {}
+        for r in results:
+            key = (r["arch"], r["display_name"])
+            if key not in act_groups:
+                act_groups[key] = []
+            act_groups[key].append(r)
 
-            act_name = r.get("activation", "relu").lower()
-            if act_name not in act_stats:
-                act_stats[act_name] = {"val_accs": [], "epochs": [], "losses": []}
-            act_stats[act_name]["val_accs"].append(val_acc)
-            act_stats[act_name]["epochs"].append(ep)
-            act_stats[act_name]["losses"].append(v_loss)
+        act_stats = {}
+        for (arch, opt), group in sorted(act_groups.items()):
+            lines.append(f"-> Architecture: {arch} | Optimizer: {opt}")
+            best_g = max(group, key=lambda x: x["val_acc"])
+            for r in sorted(group, key=lambda x: x.get("activation", "")):
+                act = r.get("activation", "relu").upper()
+                val_acc = r["val_acc"] * 100
+                ep = r["epochs_run"]
+                t_loss = r["train_loss"]
+                v_loss = r["val_loss"]
+                tm = r["elapsed_time"]
+                lines.append(f"   [{act:<7}] Val Accuracy: {val_acc:6.2f}% | Epochs to Converge: {ep:4d} | Val Loss: {v_loss:.4f} | Train Loss: {t_loss:.4f} | Time: {tm:7.2f}s")
 
-        if len(group) > 1:
-            lines.append(f"   >>> Highest Val Accuracy: {best_g.get('activation', '').upper()} ({best_g['val_acc']*100:.2f}%)\n")
-        else:
+                act_name = r.get("activation", "relu").lower()
+                if act_name not in act_stats:
+                    act_stats[act_name] = {"val_accs": [], "epochs": [], "losses": []}
+                act_stats[act_name]["val_accs"].append(val_acc)
+                act_stats[act_name]["epochs"].append(ep)
+                act_stats[act_name]["losses"].append(v_loss)
+
+            if len(group) > 1:
+                lines.append(f"   >>> Highest Val Accuracy: {best_g.get('activation', '').upper()} ({best_g['val_acc']*100:.2f}%)\n")
+            else:
+                lines.append("")
+
+        if act_stats:
+            lines.append("--- Aggregate Performance by Activation Function ---")
+            for act, data in sorted(act_stats.items(), key=lambda x: -np.mean(x[1]["val_accs"])):
+                mean_acc = np.mean(data["val_accs"])
+                mean_ep = np.mean(data["epochs"])
+                mean_loss = np.mean(data["losses"])
+                lines.append(f"  * {act.upper():<8}: Mean Val Acc = {mean_acc:6.2f}% | Mean Epochs = {mean_ep:5.1f} | Mean Val Loss = {mean_loss:.4f} (from {len(data['val_accs'])} runs)")
             lines.append("")
 
-    if act_stats:
-        lines.append("--- Aggregate Performance by Activation Function ---")
-        for act, data in sorted(act_stats.items(), key=lambda x: -np.mean(x[1]["val_accs"])):
-            mean_acc = np.mean(data["val_accs"])
-            mean_ep = np.mean(data["epochs"])
-            mean_loss = np.mean(data["losses"])
-            lines.append(f"  * {act.upper():<8}: Mean Val Acc = {mean_acc:6.2f}% | Mean Epochs = {mean_ep:5.1f} | Mean Val Loss = {mean_loss:.4f} (from {len(data['val_accs'])} runs)")
-        lines.append("\nObservations:")
-        lines.append("  - ReLU consistently avoids vanishing gradients in positive pre-activation domains, promoting faster convergence and superior accuracy.")
-        lines.append("  - Tanh provides zero-centered activations that assist optimization relative to Sigmoid, but still saturates at high positive/negative regimes.")
-        lines.append("  - Sigmoid exhibits gradient vanishing as depth increases, leading to slower parameter updates and lower validation accuracy.\n")
-
-    # -------------------------------------------------------------------------
-    # SECTION 3: MODEL ARCHITECTURE COMPARISON (KEEPING ACTIVATION & OPTIMIZER CONSTANT)
-    # -------------------------------------------------------------------------
     lines.append("=" * 115)
-    lines.append("SECTION 3: MODEL ARCHITECTURE COMPARISON (KEEPING ACTIVATION & OPTIMIZER CONSTANT)")
+    lines.append(f"SECTION {sec_num}: MODEL ARCHITECTURE COMPARISON (KEEPING OPTIMIZER CONSTANT)")
     lines.append("=" * 115)
-    lines.append("Compares the 9 architectures (3 depths x 3 variants) under identical activations and optimizers.\n")
+    lines.append("Compares the 9 architectures (3 depths x 3 variants) under identical optimizers (using ReLU).\n")
+    sec_num += 1
 
     arch_groups = {}
     for r in results:
@@ -295,7 +246,8 @@ def generate_text_summary(results, best_run=None):
     depth_stats = {3: [], 4: [], 5: []}
 
     for (act, opt), group in sorted(arch_groups.items()):
-        lines.append(f"-> Activation: {act.upper()} | Optimizer: {opt}")
+        act_label = f" | Activation: {act.upper()}" if len(distinct_acts) > 1 else ""
+        lines.append(f"-> Optimizer: {opt}{act_label}")
         best_g = max(group, key=lambda x: x["val_acc"])
         for r in sorted(group, key=lambda x: x["arch"]):
             arch = r["arch"]
@@ -336,13 +288,11 @@ def generate_text_summary(results, best_run=None):
         lines.append("  - 3-layer networks provide high layer capacities (e.g. 512-256-128) and short backpropagation paths, resulting in strong baseline performance.")
         lines.append("  - 4-layer and 5-layer variants provide deeper hierarchical representations, but require adaptive optimizers like Adam/RMSProp to converge robustly.\n")
 
-    # -------------------------------------------------------------------------
-    # SECTION 4: GRADIENT DESCENT / OPTIMIZER COMPARISON (KEEPING ARCH & ACTIVATION CONSTANT)
-    # -------------------------------------------------------------------------
     lines.append("=" * 115)
-    lines.append("SECTION 4: GRADIENT DESCENT METHOD COMPARISON (KEEPING ARCHITECTURE & ACTIVATION CONSTANT)")
+    lines.append(f"SECTION {sec_num}: GRADIENT DESCENT METHOD COMPARISON (KEEPING ARCHITECTURE CONSTANT)")
     lines.append("=" * 115)
-    lines.append("Compares all 7 optimization algorithms under identical architectures and activation functions.\n")
+    lines.append("Compares all 7 optimization algorithms under identical architectures (using ReLU).\n")
+    sec_num += 1
 
     opt_groups = {}
     for r in results:
@@ -354,7 +304,8 @@ def generate_text_summary(results, best_run=None):
     opt_stats = {}
 
     for (arch, act), group in sorted(opt_groups.items()):
-        lines.append(f"-> Architecture: {arch} | Activation: {act.upper()}")
+        act_label = f" | Activation: {act.upper()}" if len(distinct_acts) > 1 else ""
+        lines.append(f"-> Architecture: {arch}{act_label}")
         best_g = max(group, key=lambda x: x["val_acc"])
         fastest_g = min(group, key=lambda x: x["epochs_run"])
         for r in sorted(group, key=lambda x: x["display_name"]):
@@ -391,12 +342,9 @@ def generate_text_summary(results, best_run=None):
         lines.append("  - Momentum and NAG accelerate vanilla SGD by incorporating velocity vectors, greatly reducing oscillations and speeding up convergence.")
         lines.append("  - Batch GD operates with stable gradient estimates over all N samples per step, but converges more slowly in wall-clock time due to fewer parameter updates per epoch.\n")
 
-    # -------------------------------------------------------------------------
-    # SECTION 5: BEST MODEL IDENTIFICATION
-    # -------------------------------------------------------------------------
     if best_run is not None:
         lines.append("=" * 115)
-        lines.append("SECTION 5: OVERALL BEST PERFORMING MODEL IDENTIFICATION (VALIDATION ACCURACY)")
+        lines.append(f"SECTION {sec_num}: OVERALL BEST PERFORMING MODEL IDENTIFICATION (VALIDATION ACCURACY)")
         lines.append("=" * 115)
         lines.append(f"Winning Architecture:        {best_run['arch']}")
         lines.append(f"Winning Activation Function: {best_run.get('activation', 'N/A').upper()}")
@@ -411,9 +359,6 @@ def generate_text_summary(results, best_run=None):
 
 
 def parse_metrics_txt(file_path):
-    """
-    Parses a metrics.txt file back into a structured dictionary.
-    """
     data = {}
     with open(file_path, "r") as f:
         for line in f:
@@ -502,9 +447,6 @@ def parse_metrics_txt(file_path):
 
 
 def load_results_from_disk(results_dir):
-    """
-    Scans results_dir for metrics.txt (or legacy metrics.json) and reconstructs run dictionaries.
-    """
     results = []
     if not os.path.exists(results_dir):
         return results
@@ -538,26 +480,10 @@ def load_results_from_disk(results_dir):
 
 
 def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device="cpu"):
-    """
-    Evaluates best architecture and activation on test set and train set.
-    Generates confusion matrices and classification reports (Presentation of Results #4).
-    """
     if results_dir is None:
         results_dir = DEFAULT_RESULTS_DIR
-
     if best_run is None:
-        print("No best run identified.")
         return
-
-    print("\n" + "=" * 80)
-    print("BEST CONFIGURATION EVALUATION (Presentation of Results Requirement 4)")
-    print("=" * 80)
-    print(f"Selected Best Configuration:")
-    print(f"  Architecture: {best_run['arch']}")
-    print(f"  Activation:   {best_run.get('activation', 'N/A')}")
-    print(f"  Optimizer:    {best_run['display_name']}")
-    print(f"  Val Accuracy: {best_run['val_acc'] * 100:.2f}%")
-    print(f"  Epochs to Convergence: {best_run['epochs_run']}")
 
     best_model = best_run["model"].to(device)
     criterion = torch.nn.CrossEntropyLoss()
@@ -568,29 +494,14 @@ def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device
     num_classes = len(class_to_idx)
     class_names = [f"Digit {idx_to_class[i]}" for i in range(num_classes)]
 
-    # Evaluate on Test Split
     test_loss, test_acc, test_preds = evaluate(best_model, X_test, y_test, criterion)
     test_cm = confusion_matrix(y_test.cpu().numpy(), test_preds, num_classes)
     test_metrics = classification_metrics(y_test.cpu().numpy(), test_preds, num_classes)
 
-    # Evaluate on Train Split
     train_loss, train_acc, train_preds = evaluate(best_model, X_train, y_train, criterion)
     train_cm = confusion_matrix(y_train.cpu().numpy(), train_preds, num_classes)
     train_metrics = classification_metrics(y_train.cpu().numpy(), train_preds, num_classes)
 
-    print(f"\n--- Train Set Performance ---")
-    print(f"Train Accuracy: {train_acc * 100:.2f}%")
-    print("Train Confusion Matrix:")
-    print(train_cm)
-
-    print(f"\n--- Test Set Performance ---")
-    print(f"Test Accuracy:  {test_acc * 100:.2f}%")
-    print("Test Confusion Matrix:")
-    print(test_cm)
-    print("\nDetailed Test Classification Report:")
-    print_classification_report(test_metrics)
-
-    # Save Confusion Matrix Plots
     best_dir = os.path.join(results_dir, "best_architecture")
     os.makedirs(best_dir, exist_ok=True)
 
@@ -602,7 +513,6 @@ def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device
         title=f"Test Confusion Matrix ({best_run['arch'].upper()} - {act_str} - {best_run['display_name']})",
         filename=test_cm_plot
     )
-    print(f"[+] Saved Test Confusion Matrix plot to: {test_cm_plot}")
 
     train_cm_plot = os.path.join(best_dir, "train_confusion_matrix.png")
     plot_confusion_matrix_heatmap(
@@ -611,9 +521,7 @@ def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device
         title=f"Train Confusion Matrix ({best_run['arch'].upper()} - {act_str} - {best_run['display_name']})",
         filename=train_cm_plot
     )
-    print(f"[+] Saved Train Confusion Matrix plot to: {train_cm_plot}")
 
-    # Save summary markdown report
     report_path = os.path.join(results_dir, "best_architecture_report.md")
     with open(report_path, "w") as f:
         f.write(f"# Best Architecture Evaluation Report\n\n")
@@ -630,15 +538,14 @@ def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device
         f.write(f"- Macro Precision: {test_metrics['macro_precision']:.4f}\n")
         f.write(f"- Macro Recall: {test_metrics['macro_recall']:.4f}\n")
         f.write(f"- Macro F1-Score: {test_metrics['macro_f_measure']:.4f}\n")
-    print(f"[+] Saved Best Architecture Report to: {report_path}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run complete optimization experimentation suite.")
+    parser = argparse.ArgumentParser(description="Run complete optimization experimentation suite (using ReLU activation).")
     parser.add_argument("--arch", type=str, nargs="+", default=None,
                         help="Specific architecture(s) or 'all' (e.g. arch1 arch2)")
-    parser.add_argument("--activation", type=str, nargs="+", default=None,
-                        help="Specific activation(s) or 'all' (choices: relu tanh sigmoid)")
+    parser.add_argument("--activation", type=str, nargs="+", default=["relu"],
+                        help="Specific activation(s) (default: relu)")
     parser.add_argument("--optimizer", type=str, nargs="+", default=None,
                         help="Specific optimizer(s) or 'all' (e.g. bgd rmsprop adagrad)")
     parser.add_argument("--data_dir", type=str, default=None, help="Dataset directory")
@@ -670,8 +577,7 @@ def main():
         summary_path = os.path.join(args.results_dir, "summary.txt")
         with open(summary_path, "w") as f:
             f.write(summary_txt)
-        print(f"[+] Successfully generated text summary from {len(disk_results)} run(s) at: {summary_path}")
-        print("\n" + summary_txt)
+        print(summary_txt)
         return
 
     if args.arch is None or "all" in args.arch:
@@ -684,10 +590,8 @@ def main():
             else:
                 archs.append(a)
 
-    acts = list(ACTIVATION_CHOICES) if (args.activation is None or "all" in args.activation) else args.activation
+    acts = ["relu"] if (args.activation is None or "all" in args.activation) else args.activation
     opts = list(OPTIMIZERS.keys()) if (args.optimizer is None or "all" in args.optimizer) else args.optimizer
-
-
 
     run_experiments(
         architectures=archs,
@@ -705,4 +609,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

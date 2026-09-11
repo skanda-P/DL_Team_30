@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-# Ensure src/ directory is on sys.path
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
@@ -19,7 +18,6 @@ from models import build_model, ARCHITECTURES, ARCH_GROUPS, ACTIVATION_CHOICES
 from utils.metrics import classification_metrics, print_classification_report
 from utils.plotting import plot_error_vs_epochs
 from utils.training_config import MAX_EPOCHS, STOPPING_THRESHOLD, PATIENCE
-
 
 OPTIMIZERS = {
     "sgd": {
@@ -61,9 +59,6 @@ OPTIMIZERS = {
 
 
 def evaluate(model, X, y, criterion, batch_size=1024):
-    """
-    Evaluates loss, accuracy, and predicted labels for a dataset split.
-    """
     model.eval()
     total_loss = 0.0
     all_preds = []
@@ -90,13 +85,6 @@ def evaluate(model, X, y, criterion, batch_size=1024):
 def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None, results_dir=None,
                      stopping_threshold=STOPPING_THRESHOLD, max_epochs=MAX_EPOCHS,
                      patience=1, device=None, verbose=True, seed=42):
-    """
-    Trains an FCNN architecture using a specified activation and optimizer.
-    Guarantees:
-      - Uses identical initial random weights across all optimizers for this (architecture, activation).
-      - Stops when |loss_t - loss_{t-1}| < stopping_threshold (1e-4).
-      - Configures exact hyperparameters specified in the assignment PDF.
-    """
     if results_dir is None:
         results_dir = DEFAULT_RESULTS_DIR
     if device is None:
@@ -111,22 +99,15 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
 
     max_epochs_str = str(max_epochs) if max_epochs is not None else "Unlimited"
     if verbose:
-        print(f"\n=======================================================")
-        print(f"Architecture: {arch_name} | Activation: {activation} | Optimizer: {display_name}")
-        print(f"Device: {device} | Threshold: {stopping_threshold} | Max Epochs: {max_epochs_str}")
-        print(f"=======================================================")
+        print(f"\nTraining: {arch_name} | Optimizer: {display_name} | Max Epochs: {max_epochs_str}")
 
-    # Load dataset tensors on device
     (X_train, y_train), (X_val, y_val), (X_test, y_test), class_to_idx, idx_to_class = get_data_tensors(
         data_dir=data_dir, device=device
     )
     N_train = len(X_train)
 
-    # Build model and load identical initial weights for this (architecture, activation)
     model = build_model(arch_name, num_classes=len(class_to_idx), activation=activation, seed=seed).to(device)
 
-
-    # Build optimizer
     optimizer = opt_info["builder"](model.parameters())
     criterion = nn.CrossEntropyLoss()
 
@@ -135,7 +116,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
     converged = False
     start_time = time.time()
 
-    # Training loop
     epoch = 0
     while True:
         epoch += 1
@@ -145,7 +125,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
         model.train()
 
         if batch_mode == "total":
-            # Batch Gradient Descent / AdaGrad / RMSProp (batch_size = N)
             optimizer.zero_grad()
             logits = model(X_train)
             loss = criterion(logits, y_train)
@@ -153,7 +132,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
             optimizer.step()
             avg_loss = loss.item()
         else:
-            # Stochastic Gradient Descent (batch_size = 1)
             perm = torch.randperm(N_train, device=device)
             total_loss = 0.0
             for idx in perm:
@@ -167,7 +145,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
 
         epoch_losses.append(avg_loss)
 
-        # Evaluate stopping criterion: |avg_loss_{epoch} - avg_loss_{epoch-1}| < threshold
         if epoch > 1:
             diff = abs(epoch_losses[-1] - epoch_losses[-2])
             if diff < stopping_threshold:
@@ -181,18 +158,16 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
 
         if verbose and (epoch % 5 == 0 or epoch <= 5 or converged or (max_epochs is not None and epoch == max_epochs)):
             diff_str = f"{diff:.6f}" if diff != float("inf") else "N/A"
-            print(f"Epoch {epoch:4d} | Avg Loss: {avg_loss:.6f} | |Diff|: {diff_str} "
-                  f"| Below Threshold Count: {consecutive_stops}/{patience}")
+            print(f"Epoch {epoch:4d} | Avg Loss: {avg_loss:.6f} | |Diff|: {diff_str}")
 
         if converged:
             if verbose:
-                print(f"[*] Convergence reached at epoch {epoch}! (|Diff| = {diff:.6f} < {stopping_threshold})")
+                print(f"[*] Convergence reached at epoch {epoch} (|Diff| = {diff:.6f} < {stopping_threshold})")
             break
 
     elapsed_time = time.time() - start_time
     epochs_run = len(epoch_losses)
 
-    # Final evaluations
     train_loss, train_acc, train_preds = evaluate(model, X_train, y_train, criterion)
     val_loss, val_acc, val_preds = evaluate(model, X_val, y_val, criterion)
 
@@ -201,18 +176,13 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
     train_metrics = classification_metrics(y_train.cpu().numpy(), train_preds, num_classes)
 
     if verbose:
-        print(f"\nCompleted in {elapsed_time:.2f}s across {epochs_run} epochs.")
-        print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc * 100:.2f}%")
-        print(f"Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc * 100:.2f}%")
+        print(f"Epochs: {epochs_run} ({elapsed_time:.2f}s) | Train Acc: {train_acc * 100:.2f}% | Val Acc: {val_acc * 100:.2f}%")
 
-    # Save artifacts
     save_dir = os.path.join(results_dir, arch_name, activation, optimizer_key)
     os.makedirs(save_dir, exist_ok=True)
 
-    # Save model weights
     torch.save(model.state_dict(), os.path.join(save_dir, "model.pt"))
 
-    # Save loss history in text format
     loss_lines = [f"Epoch {ep:4d}: Loss = {l:.6f}" for ep, l in enumerate(epoch_losses, 1)]
     with open(os.path.join(save_dir, "loss_history.txt"), "w") as f:
         f.write(f"Architecture:          {arch_name}\n")
@@ -225,7 +195,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
         f.write("----------------------\n")
         f.write("\n".join(loss_lines) + "\n")
 
-    # Save evaluation metrics in text format
     with open(os.path.join(save_dir, "metrics.txt"), "w") as f:
         f.write("======================================================================\n")
         f.write("                       MODEL EVALUATION METRICS                       \n")
@@ -251,7 +220,6 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
             f.write(f"Digit '{c_name}': Precision = {p_val:.4f}, Recall = {r_val:.4f}, F1 = {f_val:.4f}\n")
         f.write("======================================================================\n")
 
-    # Plot single error vs epochs
     plot_error_vs_epochs(
         epoch_losses,
         title=f"Average Error vs Epochs: {arch_name} ({activation}) - {display_name}",
@@ -280,11 +248,11 @@ def train_single_run(arch_name, optimizer_key, activation="relu", data_dir=None,
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train FCNN with various optimizers and activations.")
+    parser = argparse.ArgumentParser(description="Train FCNN with various optimizers (using ReLU activation).")
     parser.add_argument("--arch", type=str, nargs="+", default=None,
                         help="Architecture(s) to train: 'all', '3_layers', '4_layers', '5_layers', or specific arch keys (default: 'all')")
-    parser.add_argument("--activation", type=str, nargs="+", default=None,
-                        help="Activation function(s) or 'all' (choices: relu, tanh, sigmoid; default: 'all')")
+    parser.add_argument("--activation", type=str, default="relu", choices=["relu"],
+                        help="Activation function (default: 'relu')")
     parser.add_argument("--optimizer", type=str, nargs="+", default=None,
                         help="Optimizer(s) to use or 'all' (choices: sgd, bgd, momentum, nag, adagrad, rmsprop, adam; default: 'all')")
     parser.add_argument("--data_dir", type=str, default=None, help="Path to data directory")
@@ -315,10 +283,9 @@ def main():
                 archs_to_run.append(a)
 
     opts_to_run = list(OPTIMIZERS.keys()) if (args.optimizer is None or "all" in args.optimizer) else args.optimizer
-    acts_to_run = list(ACTIVATION_CHOICES) if (args.activation is None or "all" in args.activation) else args.activation
+    acts_to_run = [args.activation]
 
-    # If running multiple architectures or multiple optimizers, run full comparative suite
-    if len(archs_to_run) > 1 or len(opts_to_run) > 1 or len(acts_to_run) > 1:
+    if len(archs_to_run) > 1 or len(opts_to_run) > 1:
         from compare_optimizers import run_experiments
         run_experiments(
             architectures=archs_to_run,
@@ -333,7 +300,6 @@ def main():
             seed=args.seed
         )
     else:
-        # Single individual model run
         train_single_run(
             arch_name=archs_to_run[0],
             optimizer_key=opts_to_run[0],

@@ -28,9 +28,9 @@ python data_loader.py
 ---
 
 ### 4. Train Individual Model (Optional)
-Trains a specific architecture, activation, and optimizer configuration:
+Trains a specific architecture and optimizer configuration (using ReLU):
 ```powershell
-python train.py --arch arch_3l_v1 --activation relu --optimizer adam
+python train.py --arch arch_3l_v1 --optimizer adam
 ```
 
 ---
