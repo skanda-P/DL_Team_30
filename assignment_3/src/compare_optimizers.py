@@ -40,7 +40,7 @@ def run_experiments(architectures=None, activations=None, optimizers=None, data_
     if optimizers is None:
         optimizers = list(OPTIMIZERS.keys())
     if device is None:
-        device = "cpu"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     os.makedirs(results_dir, exist_ok=True)
 
@@ -520,9 +520,11 @@ def load_results_from_disk(results_dir):
     return results
 
 
-def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device="cpu"):
+def evaluate_best_architecture(best_run, data_dir=None, results_dir=None, device=None):
     if results_dir is None:
         results_dir = DEFAULT_RESULTS_DIR
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     if best_run is None:
         return
 
@@ -745,7 +747,8 @@ def main():
     parser.add_argument("--max_epochs", type=parse_max_epochs, default=MAX_EPOCHS,
                         help="Maximum epochs per run (default: 10000, or 'none' for unlimited)")
     parser.add_argument("--patience", type=int, default=1, help="Consecutive epochs below threshold")
-    parser.add_argument("--device", type=str, default="cpu", help="Device (default: 'cpu')")
+    default_device = "cuda" if torch.cuda.is_available() else "cpu"
+    parser.add_argument("--device", type=str, default=default_device, help=f"Device (default: '{default_device}')")
     parser.add_argument("--seed", type=int, default=42, help="Deterministic seed")
     parser.add_argument("--summary_only", action="store_true",
                         help="Only generate/update summary.txt from existing results on disk without training")

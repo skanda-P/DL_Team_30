@@ -90,7 +90,7 @@ def train_single_run(arch_name, optimizer_key, activation="tanh", data_dir=None,
     if results_dir is None:
         results_dir = DEFAULT_RESULTS_DIR
     if device is None:
-        device = "cpu"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     if optimizer_key not in OPTIMIZERS:
         raise ValueError(f"Unknown optimizer '{optimizer_key}'. Available: {list(OPTIMIZERS.keys())}")
@@ -293,7 +293,8 @@ def main():
     parser.add_argument("--max_epochs", type=parse_max_epochs, default=MAX_EPOCHS,
                         help="Maximum epochs per run (default: 10000, or 'none' for unlimited)")
     parser.add_argument("--patience", type=int, default=1, help="Consecutive epochs below threshold")
-    parser.add_argument("--device", type=str, default="cpu", help="Device (default: 'cpu')")
+    default_device = "cuda" if torch.cuda.is_available() else "cpu"
+    parser.add_argument("--device", type=str, default=default_device, help=f"Device (default: '{default_device}')")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for weight initialization")
 
     args = parser.parse_args()

@@ -186,15 +186,15 @@ def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output",
 
 OPTIMIZER_STYLES = {
     "SGD (batch_size=1)": {"color": "#1f77b4", "linestyle": "-", "marker": "o"},
-    "Batch GD (batch_size=N)": {"color": "#17becf", "linestyle": "--", "marker": "s"},
-    "SGD + Momentum (batch_size=1)": {"color": "#ff7f0e", "linestyle": "-.", "marker": "^"},
-    "SGD + NAG (batch_size=1)": {"color": "#d62728", "linestyle": ":", "marker": "v"},
+    "Batch GD (batch_size=N)": {"color": "#17becf", "linestyle": "-", "marker": "s"},
+    "SGD + Momentum (batch_size=1)": {"color": "#ff7f0e", "linestyle": "-", "marker": "^"},
+    "SGD + NAG (batch_size=1)": {"color": "#d62728", "linestyle": "-", "marker": "v"},
     "AdaGrad (batch_size=N)": {"color": "#2ca02c", "linestyle": "-", "marker": "D"},
-    "RMSProp (batch_size=N)": {"color": "#9467bd", "linestyle": "--", "marker": "P"},
-    "Adam (batch_size=1)": {"color": "#8c564b", "linestyle": "-.", "marker": "*"}
+    "RMSProp (batch_size=N)": {"color": "#9467bd", "linestyle": "-", "marker": "P"},
+    "Adam (batch_size=1)": {"color": "#8c564b", "linestyle": "-", "marker": "*"}
 }
 FALLBACK_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#17becf', '#e377c2', '#bcbd22']
-FALLBACK_LINESTYLES = ['-', '--', '-.', ':']
+FALLBACK_LINESTYLES = ['-']
 FALLBACK_MARKERS = ['o', 's', '^', 'v', 'D', 'P', '*']
 
 
@@ -206,11 +206,10 @@ def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training 
     for i, (opt_name, losses) in enumerate(optimizer_losses.items()):
         style = OPTIMIZER_STYLES.get(opt_name, {
             "color": FALLBACK_COLORS[i % len(FALLBACK_COLORS)],
-            "linestyle": FALLBACK_LINESTYLES[i % len(FALLBACK_LINESTYLES)],
+            "linestyle": "-",
             "marker": FALLBACK_MARKERS[i % len(FALLBACK_MARKERS)]
         })
         color = style["color"]
-        ls = style["linestyle"]
         marker = style["marker"]
 
         if initial_values is not None and opt_name in initial_values:
@@ -221,13 +220,16 @@ def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training 
             epochs = list(range(1, len(losses) + 1))
 
         plt.plot(epochs, curve_losses, label=f"{opt_name} ({len(losses)} ep)",
-                 color=color, linestyle=ls, linewidth=2.0, alpha=0.9)
+                 color=color, linestyle='-', linewidth=1.2, alpha=0.9, zorder=4)
         if len(curve_losses) > 0:
-            plt.scatter([epochs[-1]], [curve_losses[-1]], color=color, s=60, marker=marker, zorder=5)
+            end_epoch = epochs[-1]
+            end_loss = curve_losses[-1]
+            plt.scatter([end_epoch], [end_loss], color=color, s=45, marker=marker, zorder=5)
+            plt.axvline(x=end_epoch, color=color, linestyle='--', linewidth=0.9, alpha=0.55, zorder=2)
 
     if initial_values is not None and len(initial_values) > 0:
         first_init = next(iter(initial_values.values()))
-        plt.scatter([0], [first_init], color='black', s=50, zorder=6, label=f"Initial Loss ({first_init:.4f})")
+        plt.scatter([0], [first_init], color='black', s=45, zorder=6, label=f"Initial Loss ({first_init:.4f})")
 
     plt.xlabel('Epoch', fontsize=12, fontweight='bold')
     plt.ylabel('Cross-Entropy Loss', fontsize=12, fontweight='bold')
