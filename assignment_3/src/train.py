@@ -131,7 +131,7 @@ def train_single_run(arch_name, optimizer_key, activation="tanh", data_dir=None,
         model.train()
 
         if batch_mode == "total":
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             logits = model(X_train)
             loss = criterion(logits, y_train)
             loss.backward()
@@ -139,15 +139,17 @@ def train_single_run(arch_name, optimizer_key, activation="tanh", data_dir=None,
             avg_loss = loss.item()
         else:
             perm = torch.randperm(N_train, device=device)
-            total_loss = 0.0
-            for idx in perm:
-                optimizer.zero_grad()
-                out = model(X_train[idx : idx + 1])
-                sample_loss = criterion(out, y_train[idx : idx + 1])
+            X_perm = X_train[perm]
+            y_perm = y_train[perm]
+            loss_acc = torch.zeros(1, device=device)
+            for i in range(N_train):
+                optimizer.zero_grad(set_to_none=True)
+                out = model(X_perm[i : i + 1])
+                sample_loss = criterion(out, y_perm[i : i + 1])
                 sample_loss.backward()
                 optimizer.step()
-                total_loss += sample_loss.item()
-            avg_loss = total_loss / N_train
+                loss_acc += sample_loss.detach()
+            avg_loss = (loss_acc / N_train).item()
 
         epoch_losses.append(avg_loss)
 
