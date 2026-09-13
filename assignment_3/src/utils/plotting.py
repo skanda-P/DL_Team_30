@@ -20,16 +20,28 @@ def _class_color_map(all_classes):
 plt.style.use('seaborn-v0_8-whitegrid')
 
 
-def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png"):
+def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png", initial_value=None):
     plt.figure(figsize=(8, 5))
-    plt.plot(range(1, len(errors) + 1), errors, marker='o', markersize=4,
-             linestyle='-', color='#1f77b4', linewidth=1.5)
+    if initial_value is not None:
+        plot_errors = [initial_value] + list(errors)
+        epochs = list(range(0, len(errors) + 1))
+    else:
+        plot_errors = list(errors)
+        epochs = list(range(1, len(errors) + 1))
 
-    plt.xlabel('Epochs', fontsize=12, fontweight='bold')
-    plt.ylabel('Average Error', fontsize=12, fontweight='bold')
-    plt.title(title, fontsize=14, pad=15)
+    plt.plot(epochs, plot_errors, marker='o', markersize=4,
+             linestyle='-', color='#1f77b4', linewidth=1.8)
+    if initial_value is not None:
+        plt.scatter([0], [initial_value], color='#d62728', s=40, zorder=5, label=f"Initial: {initial_value:.4f}")
+        plt.legend(loc="upper right", fontsize=10, framealpha=0.95, facecolor='white')
+
+    plt.xlabel('Epoch', fontsize=12, fontweight='bold')
+    plt.ylabel('Cross-Entropy Loss', fontsize=12, fontweight='bold')
+    plt.title(title, fontsize=13, pad=15, fontweight='bold')
+    plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
 
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
     plt.savefig(filename, dpi=150, bbox_inches='tight')
     plt.close()
 
@@ -172,39 +184,60 @@ def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output",
     plt.close()
 
 
-def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training Error vs. Epochs",
-                                      filename="superimposed_error_vs_epochs.png", log_scale=False):
-    """
-    Plots and superimposes average training error vs epochs for multiple optimizers.
-    Required for Presentation of Results (item 2).
-    """
-    plt.figure(figsize=(10, 6))
+OPTIMIZER_STYLES = {
+    "SGD (batch_size=1)": {"color": "#1f77b4", "linestyle": "-", "marker": "o"},
+    "Batch GD (batch_size=N)": {"color": "#17becf", "linestyle": "--", "marker": "s"},
+    "SGD + Momentum (batch_size=1)": {"color": "#ff7f0e", "linestyle": "-.", "marker": "^"},
+    "SGD + NAG (batch_size=1)": {"color": "#d62728", "linestyle": ":", "marker": "v"},
+    "AdaGrad (batch_size=N)": {"color": "#2ca02c", "linestyle": "-", "marker": "D"},
+    "RMSProp (batch_size=N)": {"color": "#9467bd", "linestyle": "--", "marker": "P"},
+    "Adam (batch_size=1)": {"color": "#8c564b", "linestyle": "-.", "marker": "*"}
+}
+FALLBACK_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#17becf', '#e377c2', '#bcbd22']
+FALLBACK_LINESTYLES = ['-', '--', '-.', ':']
+FALLBACK_MARKERS = ['o', 's', '^', 'v', 'D', 'P', '*']
 
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2']
-    linestyles = ['-', '--', '-.', ':', '-', '--', '-.']
-    markers = ['o', 's', '^', 'v', 'D', 'p', '*']
+
+def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training Error vs. Epochs",
+                                      filename="superimposed_error_vs_epochs.png", log_scale=False,
+                                      initial_values=None):
+    plt.figure(figsize=(11, 6.5))
 
     for i, (opt_name, losses) in enumerate(optimizer_losses.items()):
-        color = colors[i % len(colors)]
-        ls = linestyles[i % len(linestyles)]
-        marker = markers[i % len(markers)]
-        epochs = list(range(1, len(losses) + 1))
-        # Plot full curve
-        plt.plot(epochs, losses, label=f"{opt_name} (converged: {len(losses)} ep)",
-                 color=color, linestyle=ls, linewidth=1.8, alpha=0.9)
-        # Highlight convergence endpoint
-        if len(losses) > 0:
-            plt.scatter([epochs[-1]], [losses[-1]], color=color, s=50, marker=marker, zorder=5)
+        style = OPTIMIZER_STYLES.get(opt_name, {
+            "color": FALLBACK_COLORS[i % len(FALLBACK_COLORS)],
+            "linestyle": FALLBACK_LINESTYLES[i % len(FALLBACK_LINESTYLES)],
+            "marker": FALLBACK_MARKERS[i % len(FALLBACK_MARKERS)]
+        })
+        color = style["color"]
+        ls = style["linestyle"]
+        marker = style["marker"]
 
-    plt.xlabel('Epochs', fontsize=12, fontweight='bold')
-    plt.ylabel('Average Cross-Entropy Error', fontsize=12, fontweight='bold')
+        if initial_values is not None and opt_name in initial_values:
+            curve_losses = [initial_values[opt_name]] + list(losses)
+            epochs = list(range(0, len(losses) + 1))
+        else:
+            curve_losses = list(losses)
+            epochs = list(range(1, len(losses) + 1))
+
+        plt.plot(epochs, curve_losses, label=f"{opt_name} ({len(losses)} ep)",
+                 color=color, linestyle=ls, linewidth=2.0, alpha=0.9)
+        if len(curve_losses) > 0:
+            plt.scatter([epochs[-1]], [curve_losses[-1]], color=color, s=60, marker=marker, zorder=5)
+
+    if initial_values is not None and len(initial_values) > 0:
+        first_init = next(iter(initial_values.values()))
+        plt.scatter([0], [first_init], color='black', s=50, zorder=6, label=f"Initial Loss ({first_init:.4f})")
+
+    plt.xlabel('Epoch', fontsize=12, fontweight='bold')
+    plt.ylabel('Cross-Entropy Loss', fontsize=12, fontweight='bold')
     if log_scale:
         plt.yscale('log')
-        plt.ylabel('Average Cross-Entropy Error (log scale)', fontsize=12, fontweight='bold')
+        plt.ylabel('Cross-Entropy Loss (log scale)', fontsize=12, fontweight='bold')
 
     plt.title(title, fontsize=14, pad=15, fontweight='bold')
-    plt.legend(loc="upper right", fontsize=10, framealpha=0.9)
-    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.legend(loc="upper right", fontsize=9.5, framealpha=0.95, facecolor='white', edgecolor='gray')
+    plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
 
     os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
@@ -214,10 +247,6 @@ def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training 
 
 def plot_confusion_matrix_heatmap(cm, class_names=None, title="Confusion Matrix",
                                   filename="confusion_matrix.png"):
-    """
-    Plots a heatmap of the confusion matrix with numerical counts and percentages.
-    Required for Presentation of Results (item 4).
-    """
     cm = np.asarray(cm)
     num_classes = cm.shape[0]
     if class_names is None:
@@ -255,10 +284,6 @@ def plot_confusion_matrix_heatmap(cm, class_names=None, title="Confusion Matrix"
 
 def plot_convergence_bar_chart(epochs_summary, title="Convergence Epochs Across Optimizers",
                                filename="convergence_epochs_bar.png"):
-    """
-    Grouped bar chart comparing epochs to convergence across architectures.
-    Gracefully scales layout and legend for 9 architectures and 3 activations.
-    """
     configurations = list(epochs_summary.keys())
     if not configurations:
         return

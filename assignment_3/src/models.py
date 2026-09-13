@@ -39,7 +39,7 @@ ARCH_GROUPS = {
 
 
 class FCNN(nn.Module):
-    def __init__(self, input_dim=784, hidden_dims=None, num_classes=5, activation="relu"):
+    def __init__(self, input_dim=784, hidden_dims=None, num_classes=5, activation="tanh"):
         super(FCNN, self).__init__()
         if hidden_dims is None:
             hidden_dims = [512, 256, 128]
@@ -62,10 +62,13 @@ class FCNN(nn.Module):
         self.network = nn.Sequential(*layers)
 
     def _get_activation_fn(self, act_name):
-        if act_name == "relu":
+        if act_name == "tanh":
+            return nn.Tanh
+        elif act_name in ("logistic", "sigmoid"):
+            return nn.Sigmoid
+        elif act_name == "relu":
             return nn.ReLU
-        else:
-            raise ValueError(f"Unsupported activation: '{act_name}'. Allowed: {ACTIVATION_CHOICES}")
+        raise ValueError(f"Unsupported activation: '{act_name}'. Allowed: {ACTIVATION_CHOICES}")
 
     def forward(self, x):
         if x.dim() > 2:
@@ -73,7 +76,7 @@ class FCNN(nn.Module):
         return self.network(x)
 
 
-ACTIVATION_CHOICES = ["relu"]
+ACTIVATION_CHOICES = ["tanh", "logistic"]
 
 
 def initialize_weights(model, seed=42):
@@ -97,13 +100,13 @@ def get_initial_weights(arch_name, seed=42, checkpoint_dir=CHECKPOINT_DIR):
         state_dict = torch.load(init_path, map_location="cpu")
         return copy.deepcopy(state_dict)
 
-    model = FCNN(input_dim=784, hidden_dims=hidden_dims, num_classes=5, activation="relu")
+    model = FCNN(input_dim=784, hidden_dims=hidden_dims, num_classes=5, activation="tanh")
     initialize_weights(model, seed=seed)
     torch.save(model.state_dict(), init_path)
     return copy.deepcopy(model.state_dict())
 
 
-def build_model(arch_name, num_classes=5, activation="relu", seed=42, checkpoint_dir=CHECKPOINT_DIR):
+def build_model(arch_name, num_classes=5, activation="tanh", seed=42, checkpoint_dir=CHECKPOINT_DIR):
     if isinstance(arch_name, str):
         if arch_name not in ARCHITECTURES:
             raise ValueError(f"Architecture '{arch_name}' not recognized. Available: {list(ARCHITECTURES.keys())}")
@@ -123,8 +126,8 @@ def build_model(arch_name, num_classes=5, activation="relu", seed=42, checkpoint
 if __name__ == "__main__":
     variants = ARCH_GROUPS["all"]
     for arch in variants:
-        m1 = build_model(arch, activation="relu")
-        m2 = build_model(arch, activation="relu")
+        m1 = build_model(arch, activation="tanh")
+        m2 = build_model(arch, activation="tanh")
         identical = all(torch.equal(v1, v2) for (k1, v1), (k2, v2) in zip(m1.state_dict().items(), m2.state_dict().items()))
         layers_count = len(ARCHITECTURES[arch])
         params_count = sum(p.numel() for p in m1.parameters())
