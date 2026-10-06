@@ -15,5 +15,9 @@ __pycache__/
 !models.py
 !**/models.py
 
+# Local datasets
+**/data/*
+!**/data/.gitkeep
+
 # Results
-**/results/**
+# Result files are intentionally tracked.
