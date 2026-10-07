@@ -1,0 +1,5 @@
+dimension,variance_retained_pct,best_architecture,hidden_layers,val_acc_pct,test_acc_pct,test_macro_f1_pct,delta_test_acc_vs_assignment3
+32,73.81,arch_3l_v3,"256-256-256",98.39,98.47,98.47,+0.45
+64,85.77,arch_3l_v3,"256-256-256",98.47,98.18,98.18,+0.16
+128,93.46,arch_4l_v2,"256-128-64-32",98.42,98.00,98.00,-0.02
+256,97.96,arch_5l_v2,"256-256-128-128-64",98.26,97.81,97.81,-0.21

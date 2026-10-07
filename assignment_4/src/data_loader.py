@@ -1,82 +1,70 @@
-"""Load the Assignment 3 five-class MNIST image-folder splits."""
-
+# DataLoader and preprocessing pipeline for the 5-class MNIST dataset (train, validation, and test splits).
 from __future__ import annotations
 
+import os
 from pathlib import Path
-
 import torch
-from torch.utils.data import DataLoader, TensorDataset
 from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, TensorDataset
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DATA_DIR = os.path.join(CURRENT_DIR, "data")
 
 
-def resolve_data_dir(data_dir: str | Path | None = None) -> Path:
-    candidates = []
-    if data_dir is not None:
-        candidates.append(Path(data_dir))
-    current = Path(__file__).resolve().parent
-    candidates.extend((current / "data", current.parent / "data"))
-    for candidate in candidates:
-        if candidate.is_dir():
-            return candidate.resolve()
+def _is_dataset_dir(path: str | Path) -> bool:
+    return all(os.path.isdir(os.path.join(path, s)) for s in ("train", "val", "test"))
+
+
+def resolve_data_dir(data_dir: str | Path | None = None) -> str:
+    candidates = [str(data_dir)] if data_dir else []
+    candidates += [
+        DEFAULT_DATA_DIR,
+        os.path.join(os.getcwd(), "src", "data"),
+        os.path.join(os.getcwd(), "data"),
+        os.path.join(CURRENT_DIR, "..", "..", "assignment_3", "src", "data"),
+        os.path.join(CURRENT_DIR, "..", "data"),
+    ]
+    for c in candidates:
+        if c and os.path.isdir(c) and _is_dataset_dir(c):
+            return os.path.abspath(c)
+
     raise FileNotFoundError(
-        "Dataset directory was not found. Expected train/, val/, and test/ under "
-        + str(candidates[0])
+        "Could not find a dataset directory containing train/, val/ and test/.\n"
+        f"Looked in: {[c for c in candidates if c]}\n"
+        "The dataset is the same as Assignment 3: copy the train/, val/, test/ folders "
+        "from assignment_3/src/data into assignment_4/src/data (or pass --data_dir)."
     )
 
 
-def _load_split(split_dir: Path) -> tuple[torch.Tensor, torch.Tensor, dict[str, int]]:
-    if not split_dir.is_dir():
-        raise FileNotFoundError(f"Missing dataset split: {split_dir}")
-    transform = transforms.Compose(
-        [
-            transforms.Grayscale(num_output_channels=1),
-            transforms.ToTensor(),
-            transforms.Lambda(torch.flatten),
-        ]
-    )
-    dataset = datasets.ImageFolder(str(split_dir), transform=transform)
-    if not dataset:
-        raise ValueError(f"Dataset split is empty: {split_dir}")
-    loader = DataLoader(dataset, batch_size=len(dataset), shuffle=False, num_workers=0)
-    features, labels = next(iter(loader))
-    return features.float(), labels.long(), dataset.class_to_idx
+def load_mnist_subset(data_dir: str | Path | None = None, device: str | torch.device = "cpu"):
+    resolved_dir = resolve_data_dir(data_dir)
 
+    transform = transforms.Compose([
+        transforms.Grayscale(num_output_channels=1),
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: torch.flatten(x)),
+    ])
 
-def load_mnist_subset(
-    data_dir: str | Path | None = None,
-    device: str | torch.device = "cpu",
-) -> tuple[
-    tuple[torch.Tensor, torch.Tensor],
-    tuple[torch.Tensor, torch.Tensor],
-    tuple[torch.Tensor, torch.Tensor],
-    dict[str, int],
-    dict[int, str],
-]:
-    root = resolve_data_dir(data_dir)
-    loaded = {}
-    class_to_idx: dict[str, int] | None = None
-    for split in ("train", "val", "test"):
-        features, labels, mapping = _load_split(root / split)
+    splits = {}
+    class_to_idx = None
+    for split in ["train", "val", "test"]:
+        split_path = os.path.join(resolved_dir, split)
+        dataset = datasets.ImageFolder(split_path, transform=transform)
         if class_to_idx is None:
-            class_to_idx = mapping
-        elif mapping != class_to_idx:
-            raise ValueError(f"Class mapping mismatch in {split}: {mapping} != {class_to_idx}")
-        loaded[split] = (features.to(device), labels.to(device))
-    assert class_to_idx is not None
-    return (
-        loaded["train"],
-        loaded["val"],
-        loaded["test"],
-        class_to_idx,
-        {index: name for name, index in class_to_idx.items()},
-    )
+            class_to_idx = dataset.class_to_idx
+        elif class_to_idx != dataset.class_to_idx:
+            raise ValueError(f"Class mapping mismatch between splits: {class_to_idx} vs {dataset.class_to_idx}")
+
+        loader = DataLoader(dataset, batch_size=len(dataset), shuffle=False, num_workers=0)
+        X, y = next(iter(loader))
+        splits[split] = (X.float().to(device), y.long().to(device))
+
+    idx_to_class = {v: k for k, v in class_to_idx.items()}
+    return splits["train"], splits["val"], splits["test"], class_to_idx, idx_to_class
 
 
-def get_data_tensors(
-    data_dir: str | Path | None = None,
-    device: str | torch.device = "cpu",
-):
-    return load_mnist_subset(data_dir, device)
+def get_data_tensors(data_dir: str | Path | None = None, device: str | torch.device = "cpu"):
+    return load_mnist_subset(data_dir=data_dir, device=device)
 
 
 def get_data_loaders(
@@ -94,3 +82,13 @@ def get_data_loaders(
         class_to_idx,
         idx_to_class,
     )
+
+
+if __name__ == "__main__":
+    print("Testing data_loader...")
+    (X_tr, y_tr), (X_va, y_va), (X_te, y_te), c2i, i2c = get_data_tensors()
+    print(f"Train samples: {X_tr.shape[0]}, Features: {X_tr.shape[1]}")
+    print(f"Val samples:   {X_va.shape[0]}, Features: {X_va.shape[1]}")
+    print(f"Test samples:  {X_te.shape[0]}, Features: {X_te.shape[1]}")
+    print(f"Class mapping: {c2i}")
+    print(f"Pixel min: {X_tr.min().item():.3f}, max: {X_tr.max().item():.3f}")

@@ -1,6 +1,8 @@
-
+# Metric calculation utilities for classification accuracy, loss tracking, and confusion matrices.
+"""Classification and reconstruction metrics (from scratch)."""
 
 import numpy as np
+
 
 def confusion_matrix(y_true, y_pred, num_classes):
     """
@@ -12,6 +14,7 @@ def confusion_matrix(y_true, y_pred, num_classes):
         matrix[int(t)][int(p)] += 1
     return matrix
 
+
 def classification_metrics(y_true, y_pred, num_classes):
     """
     Calculates overall accuracy, along with class-wise, macro, and micro
@@ -20,12 +23,10 @@ def classification_metrics(y_true, y_pred, num_classes):
     cm = confusion_matrix(y_true, y_pred, num_classes)
     total_samples = len(y_true)
 
-
     tp = np.zeros(num_classes)
     fp = np.zeros(num_classes)
     fn = np.zeros(num_classes)
     tn = np.zeros(num_classes)
-
 
     class_accuracies = np.zeros(num_classes)
     precisions = np.zeros(num_classes)
@@ -36,31 +37,23 @@ def classification_metrics(y_true, y_pred, num_classes):
         tp[i] = cm[i, i]
         fp[i] = np.sum(cm[:, i]) - tp[i]
         fn[i] = np.sum(cm[i, :]) - tp[i]
-
-
         tn[i] = total_samples - (tp[i] + fp[i] + fn[i])
 
-
         class_accuracies[i] = (tp[i] + tn[i]) / total_samples if total_samples > 0 else 0.0
-
-
         precisions[i] = tp[i] / (tp[i] + fp[i]) if (tp[i] + fp[i]) > 0 else 0.0
-
-
         recalls[i] = tp[i] / (tp[i] + fn[i]) if (tp[i] + fn[i]) > 0 else 0.0
+        f_measures[i] = (
+            (2 * (precisions[i] * recalls[i]) / (precisions[i] + recalls[i]))
+            if (precisions[i] + recalls[i]) > 0
+            else 0.0
+        )
 
-
-        f_measures[i] = (2 * (precisions[i] * recalls[i]) / (precisions[i] + recalls[i])
-                          if (precisions[i] + recalls[i]) > 0 else 0.0)
-
-    overall_accuracy = np.trace(cm) / np.sum(cm)
-
+    overall_accuracy = np.trace(cm) / np.sum(cm) if np.sum(cm) > 0 else 0.0
 
     macro_precision = np.mean(precisions)
     macro_recall = np.mean(recalls)
     macro_f_measure = np.mean(f_measures)
     macro_accuracy = np.mean(class_accuracies)
-
 
     total_tp = np.sum(tp)
     total_fp = np.sum(fp)
@@ -68,8 +61,11 @@ def classification_metrics(y_true, y_pred, num_classes):
 
     micro_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
     micro_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
-    micro_f_measure = (2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
-                        if (micro_precision + micro_recall) > 0 else 0.0)
+    micro_f_measure = (
+        (2 * (micro_precision * micro_recall) / (micro_precision + micro_recall))
+        if (micro_precision + micro_recall) > 0
+        else 0.0
+    )
 
     return {
         "confusion_matrix": cm,
@@ -84,8 +80,9 @@ def classification_metrics(y_true, y_pred, num_classes):
         "macro_f_measure": macro_f_measure,
         "micro_precision": micro_precision,
         "micro_recall": micro_recall,
-        "micro_f_measure": micro_f_measure
+        "micro_f_measure": micro_f_measure,
     }
+
 
 def print_classification_report(metrics_dict):
     print("Confusion Matrix:")
@@ -110,17 +107,18 @@ def print_classification_report(metrics_dict):
     print(f"Micro Recall:    {metrics_dict['micro_recall']:.4f}")
     print(f"Micro F-Measure: {metrics_dict['micro_f_measure']:.4f}")
 
-def mse(y_true, y_pred):
 
+def mse(y_true, y_pred):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     return np.mean((y_true - y_pred) ** 2)
 
+
 def rmse(y_true, y_pred):
     return np.sqrt(mse(y_true, y_pred))
 
-def percent_rmse(y_true, y_pred):
 
+def percent_rmse(y_true, y_pred):
     y_true = np.array(y_true)
     error = rmse(y_true, y_pred)
     mean_val = np.mean(y_true)

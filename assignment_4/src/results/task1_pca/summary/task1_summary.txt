@@ -1,0 +1,18 @@
+Task 1 summary: PCA + FCNN classification
+==============================================================================
+  Dim  Var kept Best arch (by val acc)    Val acc  Test acc  Macro F1
+------------------------------------------------------------------------------
+   32    73.81% arch_3l_v3                 98.39%    98.47%    98.47%
+   64    85.77% arch_3l_v3                 98.47%    98.18%    98.18%
+  128    93.46% arch_4l_v2                 98.42%    98.00%    98.00%
+  256    97.96% arch_5l_v2                 98.26%    97.81%    97.81%
+
+(c) Best reduced dimension (highest test accuracy): 32  -> 98.47% test accuracy with arch_3l_v3 [256, 256, 256]
+
+(d) Comparison with the best result of Assignment 3 (raw 784-dim pixels):
+    Assignment 3: arch_4l_v3 [384, 256, 128, 64], SGD + Momentum (batch_size=1, lr=0.001, momentum=0.9)
+    Assignment 3: val 98.39%  test 98.02%  macro F1 98.02%
+    PCA-32  : test 98.47%  (+0.45 pts vs Assignment 3)
+    PCA-64  : test 98.18%  (+0.16 pts vs Assignment 3)
+    PCA-128 : test 98.00%  (-0.02 pts vs Assignment 3)
+    PCA-256 : test 97.81%  (-0.21 pts vs Assignment 3)

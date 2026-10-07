@@ -1,17 +1,31 @@
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.colors as mcolors
-    from mpl_toolkits.mplot3d import Axes3D
-except ImportError:
-    raise ImportError("matplotlib is required. Install it with: pip install matplotlib")
+# Plotting and visualization functions for loss curves, reconstructed images, confusion matrices, and metrics.
+
 import os
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
+try:
+    plt.style.use("seaborn-v0_8-whitegrid")
+except OSError:
+    pass
 
 
+def _save(filename):
+    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+    plt.savefig(filename, dpi=200, bbox_inches="tight")
+    plt.close()
+
+
+def save_figure(filename):
+    _save(filename)
+
+
+# ------------------------------------------------------------------ Task 2: Autoencoders
 def plot_reconstruction_grid(original, reconstructed, labels, filename, title):
     """Save one original/reconstruction pair for each class."""
-    import matplotlib.pyplot as plt
-
     labels = np.asarray(labels)
     original = np.asarray(original)
     reconstructed = np.asarray(reconstructed)
@@ -38,6 +52,130 @@ def plot_reconstruction_grid(original, reconstructed, labels, filename, title):
     plt.close(fig)
 
 
+# ------------------------------------------------------------------ Loss curves and Task 1
+def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png",
+                         initial_value=None, ylabel="Average training loss"):
+    plt.figure(figsize=(8, 5))
+    if initial_value is not None:
+        values, epochs = [initial_value] + list(errors), list(range(0, len(errors) + 1))
+    else:
+        values, epochs = list(errors), list(range(1, len(errors) + 1))
+    plt.plot(epochs, values, marker="o", markersize=3, linewidth=1.5)
+    plt.title(title, fontsize=13, fontweight="bold")
+    plt.xlabel("Epoch", fontsize=11)
+    plt.ylabel(ylabel, fontsize=11)
+    plt.tight_layout()
+    _save(filename)
+
+
+def plot_confusion_matrix_heatmap(cm, class_names=None, title="Confusion Matrix",
+                                  filename="confusion_matrix.png"):
+    cm = np.asarray(cm)
+    n = cm.shape[0]
+    class_names = class_names or [f"Class {i}" for i in range(n)]
+
+    plt.figure(figsize=(7, 6))
+    plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+    plt.title(title, fontsize=14, pad=15, fontweight="bold")
+    plt.colorbar(fraction=0.046, pad=0.04)
+    ticks = np.arange(n)
+    plt.xticks(ticks, class_names, fontsize=11)
+    plt.yticks(ticks, class_names, fontsize=11)
+
+    thresh, total = cm.max() / 2.0, cm.sum()
+    for i in range(n):
+        for j in range(n):
+            pct = cm[i, j] / total * 100.0 if total > 0 else 0.0
+            plt.text(j, i, f"{cm[i, j]}\n({pct:.1f}%)", ha="center", va="center",
+                     color="white" if cm[i, j] > thresh else "black", fontsize=10, fontweight="bold")
+
+    plt.ylabel("True Label", fontsize=12, fontweight="bold")
+    plt.xlabel("Predicted Label", fontsize=12, fontweight="bold")
+    plt.tight_layout()
+    _save(filename)
+
+
+def plot_accuracy_vs_dimension(dims, test_accs, reference=None, reference_label="Assignment 3 best",
+                               title="Test accuracy vs reduced dimension", filename="test_acc_vs_dim.png"):
+    """Bar chart of test accuracy (%) per reduced dimension, optional reference line."""
+    plt.figure(figsize=(7, 5))
+    xs = np.arange(len(dims))
+    bars = plt.bar(xs, test_accs, color="#4C78A8", width=0.55)
+    for b, v in zip(bars, test_accs):
+        plt.text(b.get_x() + b.get_width() / 2, v + 0.03, f"{v:.2f}", ha="center", va="bottom", fontsize=10)
+    if reference is not None:
+        plt.axhline(reference, color="#E45756", linestyle="--", linewidth=1.5,
+                    label=f"{reference_label} ({reference:.2f}%)")
+        plt.legend(loc="upper right")
+    lo = min(list(test_accs) + ([reference] if reference is not None else []))
+    plt.ylim(max(0, lo - 2.0), 100.0)
+    plt.xticks(xs, [str(d) for d in dims], fontsize=11)
+    plt.xlabel("Reduced dimension", fontsize=11)
+    plt.ylabel("Test accuracy (%)", fontsize=11)
+    plt.title(title, fontsize=13, fontweight="bold")
+    plt.tight_layout()
+    _save(filename)
+
+
+def plot_val_accuracy_heatmap(arch_names, dims, val_acc_matrix, title="Validation accuracy (%)",
+                              filename="val_acc_heatmap.png"):
+    """val_acc_matrix[i][j] = validation accuracy of arch i at dimension j (NaN if missing)."""
+    mat = np.asarray(val_acc_matrix, dtype=float)
+    plt.figure(figsize=(1.3 * len(dims) + 3.5, 0.5 * len(arch_names) + 2))
+    plt.imshow(mat, cmap="YlGnBu", aspect="auto")
+    plt.colorbar(fraction=0.046, pad=0.04)
+    plt.xticks(range(len(dims)), [str(d) for d in dims])
+    plt.yticks(range(len(arch_names)), arch_names)
+    vmax = np.nanmax(mat)
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            if not np.isnan(mat[i, j]):
+                best_in_col = mat[i, j] == np.nanmax(mat[:, j])
+                plt.text(j, i, f"{mat[i, j]:.2f}", ha="center", va="center", fontsize=9,
+                         fontweight="bold" if best_in_col else "normal",
+                         color="white" if mat[i, j] > 0.5 * (vmax + np.nanmin(mat)) else "black")
+    plt.xlabel("Reduced dimension", fontsize=11)
+    plt.title(title, fontsize=13, fontweight="bold")
+    plt.tight_layout()
+    _save(filename)
+
+
+def plot_convergence_bar_chart(epochs_summary, title="Convergence Epochs Across Optimizers",
+                               filename="convergence_epochs_bar.png"):
+    configurations = list(epochs_summary.keys())
+    if not configurations:
+        return
+    first_config = configurations[0]
+    optimizers = list(epochs_summary[first_config].keys())
+
+    x = np.arange(len(optimizers))
+    num_configs = len(configurations)
+
+    fig_w = max(12, len(optimizers) * 2.0)
+    fig_h = 7
+    plt.figure(figsize=(fig_w, fig_h))
+
+    width = 0.85 / max(num_configs, 1)
+
+    for i, cfg in enumerate(configurations):
+        values = [epochs_summary[cfg].get(opt, 0) for opt in optimizers]
+        offset = (i - num_configs / 2 + 0.5) * width
+        plt.bar(x + offset, values, width, label=cfg)
+
+    plt.xlabel('Optimizer', fontsize=12, fontweight='bold')
+    plt.ylabel('Epochs to Convergence', fontsize=12, fontweight='bold')
+    plt.title(title, fontsize=14, pad=15, fontweight='bold')
+    plt.xticks(x, optimizers, rotation=15, fontsize=11)
+
+    if num_configs > 6:
+        plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8, ncol=2 if num_configs > 15 else 1)
+    else:
+        plt.legend(fontsize=10)
+
+    plt.grid(axis='y', linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    _save(filename)
+
 
 _CLASS_COLORS = plt.get_cmap('tab10').colors
 
@@ -45,35 +183,6 @@ _CLASS_COLORS = plt.get_cmap('tab10').colors
 def _class_color_map(all_classes):
     return {int(c): _CLASS_COLORS[i % len(_CLASS_COLORS)]
             for i, c in enumerate(sorted(int(c) for c in all_classes))}
-
-
-plt.style.use('seaborn-v0_8-whitegrid')
-
-
-def plot_error_vs_epochs(errors, title="Average Error vs Epochs", filename="error_vs_epochs.png", initial_value=None):
-    plt.figure(figsize=(8, 5))
-    if initial_value is not None:
-        plot_errors = [initial_value] + list(errors)
-        epochs = list(range(0, len(errors) + 1))
-    else:
-        plot_errors = list(errors)
-        epochs = list(range(1, len(errors) + 1))
-
-    plt.plot(epochs, plot_errors, marker='o', markersize=4,
-             linestyle='-', color='#1f77b4', linewidth=1.8)
-    if initial_value is not None:
-        plt.scatter([0], [initial_value], color='#d62728', s=40, zorder=5, label=f"Initial: {initial_value:.4f}")
-        plt.legend(loc="upper right", fontsize=10, framealpha=0.95, facecolor='white')
-
-    plt.xlabel('Epoch', fontsize=12, fontweight='bold')
-    plt.ylabel('Cross-Entropy Loss', fontsize=12, fontweight='bold')
-    plt.title(title, fontsize=13, pad=15, fontweight='bold')
-    plt.grid(True, linestyle='--', alpha=0.5)
-    plt.tight_layout()
-
-    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
 
 
 def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region",
@@ -110,13 +219,11 @@ def plot_decision_regions(X_train, y_train, predict_fn, title="Decision Region",
     plt.ylabel('Feature 2 (x2)', fontsize=12)
     plt.title(title, fontsize=14, pad=15)
     plt.tight_layout()
-
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
+    _save(filename)
 
 
 def plot_node_output_surface(X, z, node_label, split_name, filename, title=None):
-    # 3D scatter plot of node output over 2D input space
+    from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -129,17 +236,11 @@ def plot_node_output_surface(X, z, node_label, split_name, filename, title=None)
     if title is None:
         title = f"{node_label} ({split_name.capitalize()})"
     ax.set_title(title, fontsize=14, pad=20)
-
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
+    _save(filename)
 
 
-"""added"""
 def plot_node_output_1d(X, z, node_label, split_name, filename, title=None):
-    # 2D scatter of node output over a single (1D) input feature.
-    # Companion to plot_node_output_surface, used for the univariate dataset.
     plt.figure(figsize=(8, 5))
-
     x_flat = np.asarray(X).reshape(-1)
     sort_idx = np.argsort(x_flat)
 
@@ -153,10 +254,8 @@ def plot_node_output_1d(X, z, node_label, split_name, filename, title=None):
         title = f"{node_label} ({split_name.capitalize()})"
     plt.title(title, fontsize=14, pad=15)
     plt.tight_layout()
+    _save(filename)
 
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
-    
 
 def plot_regression_1d(X, y_true, y_pred, title="1D Regression: Target vs Model", filename="reg_1d.png"):
     plt.figure(figsize=(9, 6))
@@ -169,12 +268,11 @@ def plot_regression_1d(X, y_true, y_pred, title="1D Regression: Target vs Model"
     plt.title(title, fontsize=14, pad=15)
     plt.legend(loc="best", fontsize=11)
     plt.tight_layout()
-
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
+    _save(filename)
 
 
 def plot_regression_2d(X, y_true, y_pred, title="2D Regression: Target vs Model", filename="reg_2d.png"):
+    from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -189,9 +287,7 @@ def plot_regression_2d(X, y_true, y_pred, title="2D Regression: Target vs Model"
     ax.set_zlabel('y-value', fontsize=11, labelpad=10)
     ax.set_title(title, fontsize=14, pad=20)
     ax.legend(loc="best")
-
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
+    _save(filename)
 
 
 def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output", filename="target_vs_model.png"):
@@ -209,9 +305,7 @@ def plot_target_vs_model_scatter(y_true, y_pred, title="Target vs Model Output",
 
     plt.axis('equal')
     plt.tight_layout()
-
-    plt.savefig(filename, dpi=150, bbox_inches='tight')
-    plt.close()
+    _save(filename)
 
 
 OPTIMIZER_STYLES = {
@@ -224,7 +318,6 @@ OPTIMIZER_STYLES = {
     "Adam (batch_size=1)": {"color": "#8c564b", "linestyle": "-", "marker": "*"}
 }
 FALLBACK_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#17becf', '#e377c2', '#bcbd22']
-FALLBACK_LINESTYLES = ['-']
 FALLBACK_MARKERS = ['o', 's', '^', 'v', 'D', 'P', '*']
 
 
@@ -271,84 +364,4 @@ def plot_superimposed_error_vs_epochs(optimizer_losses, title="Average Training 
     plt.legend(loc="upper right", fontsize=9.5, framealpha=0.95, facecolor='white', edgecolor='gray')
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
-
-    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
-    plt.savefig(filename, dpi=200, bbox_inches='tight')
-    plt.close()
-
-
-def plot_confusion_matrix_heatmap(cm, class_names=None, title="Confusion Matrix",
-                                  filename="confusion_matrix.png"):
-    cm = np.asarray(cm)
-    num_classes = cm.shape[0]
-    if class_names is None:
-        class_names = [f"Class {i}" for i in range(num_classes)]
-
-    plt.figure(figsize=(7, 6))
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title(title, fontsize=14, pad=15, fontweight='bold')
-    plt.colorbar(fraction=0.046, pad=0.04)
-
-    tick_marks = np.arange(num_classes)
-    plt.xticks(tick_marks, class_names, fontsize=11)
-    plt.yticks(tick_marks, class_names, fontsize=11)
-
-    thresh = cm.max() / 2.0
-    total = np.sum(cm)
-    for i in range(num_classes):
-        for j in range(num_classes):
-            val = cm[i, j]
-            pct = (val / total * 100.0) if total > 0 else 0.0
-            text_color = "white" if val > thresh else "black"
-            plt.text(j, i, f"{val}\n({pct:.1f}%)",
-                     horizontalalignment="center",
-                     verticalalignment="center",
-                     color=text_color, fontsize=10, fontweight='bold')
-
-    plt.ylabel('True Label', fontsize=12, fontweight='bold')
-    plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
-    plt.tight_layout()
-
-    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
-    plt.savefig(filename, dpi=200, bbox_inches='tight')
-    plt.close()
-
-
-def plot_convergence_bar_chart(epochs_summary, title="Convergence Epochs Across Optimizers",
-                               filename="convergence_epochs_bar.png"):
-    configurations = list(epochs_summary.keys())
-    if not configurations:
-        return
-    first_config = configurations[0]
-    optimizers = list(epochs_summary[first_config].keys())
-
-    x = np.arange(len(optimizers))
-    num_configs = len(configurations)
-
-    fig_w = max(12, len(optimizers) * 2.0)
-    fig_h = 7
-    plt.figure(figsize=(fig_w, fig_h))
-
-    width = 0.85 / max(num_configs, 1)
-
-    for i, cfg in enumerate(configurations):
-        values = [epochs_summary[cfg].get(opt, 0) for opt in optimizers]
-        offset = (i - num_configs / 2 + 0.5) * width
-        plt.bar(x + offset, values, width, label=cfg)
-
-    plt.xlabel('Optimizer', fontsize=12, fontweight='bold')
-    plt.ylabel('Epochs to Convergence', fontsize=12, fontweight='bold')
-    plt.title(title, fontsize=14, pad=15, fontweight='bold')
-    plt.xticks(x, optimizers, rotation=15, fontsize=11)
-
-    if num_configs > 6:
-        plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8, ncol=2 if num_configs > 15 else 1)
-    else:
-        plt.legend(fontsize=10)
-
-    plt.grid(axis='y', linestyle='--', alpha=0.6)
-    plt.tight_layout()
-
-    os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
-    plt.savefig(filename, dpi=200, bbox_inches='tight')
-    plt.close()
+    _save(filename)
