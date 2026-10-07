@@ -1,1 +1,4 @@
-# Hyperparameters, training configurations (epochs, learning rates, batch sizes, bottleneck sizes), and architecture definitions.
+TASK2_BATCH_SIZE = 128
+TASK2_LEARNING_RATE = 0.001
+TASK2_PATIENCE = 5
+TASK2_MIN_DELTA = 1e-5
