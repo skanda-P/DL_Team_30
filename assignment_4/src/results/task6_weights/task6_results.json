@@ -1,0 +1,41 @@
+{
+  "bottleneck": 32,
+  "models": [
+    {
+      "model": "Standard AE (0% noise)",
+      "noise_pct": 0,
+      "bottleneck": 32,
+      "mean_weight": -7.725047180429101e-05,
+      "std_weight": 0.24090737104415894,
+      "min_weight": -1.2965635061264038,
+      "max_weight": 1.3241493701934814,
+      "mean_l1_norm": 143.21201705932617,
+      "mean_l2_norm": 6.717628926038742,
+      "mean_laplacian_var": 0.4086345983669162
+    },
+    {
+      "model": "Denoising AE (20% noise)",
+      "noise_pct": 20,
+      "bottleneck": 32,
+      "mean_weight": -0.0027190172113478184,
+      "std_weight": 0.12888962030410767,
+      "min_weight": -0.5656687617301941,
+      "max_weight": 0.6569167971611023,
+      "mean_l1_norm": 66.17737829685211,
+      "mean_l2_norm": 3.599777862429619,
+      "mean_laplacian_var": 0.024690921389264986
+    },
+    {
+      "model": "Denoising AE (40% noise)",
+      "noise_pct": 40,
+      "bottleneck": 32,
+      "mean_weight": -0.003202797146514058,
+      "std_weight": 0.12660665810108185,
+      "min_weight": -0.5789068937301636,
+      "max_weight": 0.6438524723052979,
+      "mean_l1_norm": 64.29410946369171,
+      "mean_l2_norm": 3.539122611284256,
+      "mean_laplacian_var": 0.020443076238734648
+    }
+  ]
+}

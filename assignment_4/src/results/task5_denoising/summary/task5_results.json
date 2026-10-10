@@ -1,0 +1,179 @@
+{
+  "bottleneck": 32,
+  "architecture": "arch_3l_v1",
+  "noise_type": "gaussian",
+  "noise_std": 0.5,
+  "autoencoders": [
+    {
+      "noise": 0.2,
+      "noise_pct": 20,
+      "bottleneck": 32,
+      "epochs": 81,
+      "train_time_s": 15.7,
+      "clean_in": {
+        "train": 0.009855768643319607,
+        "val": 0.010415938682854176,
+        "test": 0.010295812971889973
+      },
+      "noisy_in": {
+        "train": 0.011134774424135685,
+        "val": 0.011658656410872936,
+        "test": 0.011554369702935219
+      }
+    },
+    {
+      "noise": 0.4,
+      "noise_pct": 40,
+      "bottleneck": 32,
+      "epochs": 81,
+      "train_time_s": 14.3,
+      "clean_in": {
+        "train": 0.011323097161948681,
+        "val": 0.011842917650938034,
+        "test": 0.011690858751535416
+      },
+      "noisy_in": {
+        "train": 0.012833044864237309,
+        "val": 0.013301828876137733,
+        "test": 0.01316093374043703
+      }
+    }
+  ],
+  "classification": [
+    {
+      "name": "DAE20-32",
+      "input_dim": 32,
+      "best_arch": "arch_3l_v1",
+      "best_hidden_dims": [
+        512,
+        256,
+        128
+      ],
+      "best_val_acc": 98.65612648221344,
+      "test_acc": 98.65612648221344,
+      "test_macro_f1": 98.65522086670993,
+      "test_macro_precision": 98.65716739376809,
+      "test_macro_recall": 98.65612648221344,
+      "confusion_matrix": [
+        [
+          741,
+          2,
+          10,
+          2,
+          4
+        ],
+        [
+          0,
+          756,
+          1,
+          1,
+          1
+        ],
+        [
+          5,
+          1,
+          746,
+          3,
+          4
+        ],
+        [
+          2,
+          3,
+          2,
+          751,
+          1
+        ],
+        [
+          1,
+          5,
+          1,
+          2,
+          750
+        ]
+      ],
+      "class_names": [
+        "3",
+        "4",
+        "5",
+        "7",
+        "8"
+      ],
+      "val_acc_by_arch": {
+        "arch_3l_v1": 98.65612648221344
+      },
+      "epochs_by_arch": {
+        "arch_3l_v1": 12
+      },
+      "noise_pct": 20
+    },
+    {
+      "name": "DAE40-32",
+      "input_dim": 32,
+      "best_arch": "arch_3l_v1",
+      "best_hidden_dims": [
+        512,
+        256,
+        128
+      ],
+      "best_val_acc": 98.70882740447958,
+      "test_acc": 98.65612648221344,
+      "test_macro_f1": 98.65584908968357,
+      "test_macro_precision": 98.65787104988371,
+      "test_macro_recall": 98.65612648221344,
+      "confusion_matrix": [
+        [
+          743,
+          0,
+          9,
+          5,
+          2
+        ],
+        [
+          0,
+          755,
+          2,
+          1,
+          1
+        ],
+        [
+          4,
+          1,
+          747,
+          2,
+          5
+        ],
+        [
+          1,
+          3,
+          3,
+          752,
+          0
+        ],
+        [
+          3,
+          5,
+          3,
+          1,
+          747
+        ]
+      ],
+      "class_names": [
+        "3",
+        "4",
+        "5",
+        "7",
+        "8"
+      ],
+      "val_acc_by_arch": {
+        "arch_3l_v1": 98.70882740447958
+      },
+      "epochs_by_arch": {
+        "arch_3l_v1": 12
+      },
+      "noise_pct": 40
+    }
+  ],
+  "task3_reference": {
+    "test_acc": 98.49802371541502
+  }
+}

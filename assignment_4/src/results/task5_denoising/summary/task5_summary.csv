@@ -1,0 +1,3 @@
+noise_pct,bottleneck,architecture,epochs,train_mse_clean_in,val_mse_clean_in,test_mse_clean_in,train_mse_noisy_in,val_mse_noisy_in,test_mse_noisy_in,fcnn_val_acc_pct,fcnn_test_acc_pct,fcnn_test_macro_f1_pct
+20,32,arch_3l_v1,81,0.009856,0.010416,0.010296,0.011135,0.011659,0.011554,98.66,98.66,98.66
+40,32,arch_3l_v1,81,0.011323,0.011843,0.011691,0.012833,0.013302,0.013161,98.71,98.66,98.66

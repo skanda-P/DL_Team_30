@@ -1,0 +1,5 @@
+dimension,best_architecture,hidden_layers,val_acc_pct,test_acc_pct,test_macro_f1_pct,delta_test_acc_vs_assignment3,task1_pca_test_acc_pct,task3_ae1_test_acc_pct
+32,arch_4l_v1,"512-256-128-64",98.74,98.55,98.55,+0.53,98.47,98.50
+64,arch_4l_v3,"384-256-128-64",98.58,98.37,98.37,+0.35,98.18,98.37
+128,arch_4l_v3,"384-256-128-64",98.55,98.31,98.31,+0.29,98.00,98.00
+256,arch_4l_v3,"384-256-128-64",98.50,98.08,98.08,+0.06,97.81,98.29

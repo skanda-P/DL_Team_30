@@ -1,0 +1,33 @@
+Representation:          AE1-256 (input_dim = 256)
+Selected architecture:   arch_5l_v1  [512, 384, 256, 128, 64]   (selected by validation accuracy)
+Validation accuracy:     98.29%
+Test accuracy:           98.29%
+Test macro precision:    98.29%
+Test macro recall:       98.29%
+Test macro F1:           98.29%
+Epochs to converge:      15
+
+Validation accuracy of all architectures (best first):
+  arch_5l_v1  512-384-256-128-64     val acc  98.29%   epochs   15
+  arch_3l_v1  512-256-128            val acc  98.26%   epochs    9
+  arch_4l_v2  256-128-64-32          val acc  98.26%   epochs   12
+  arch_4l_v1  512-256-128-64         val acc  98.18%   epochs   11
+  arch_5l_v3  256-128-64-64-32       val acc  98.16%   epochs   12
+  arch_5l_v2  256-256-128-128-64     val acc  98.16%   epochs   12
+  arch_3l_v3  256-256-256            val acc  98.13%   epochs    9
+  arch_3l_v2  256-128-64             val acc  98.10%   epochs   11
+  arch_4l_v3  384-256-128-64         val acc  98.08%   epochs   12
+
+Test confusion matrix (rows = true, cols = predicted; classes ['3', '4', '5', '7', '8']):
+[[740   0  11   5   3]
+ [  0 752   2   3   2]
+ [  6   2 743   1   7]
+ [  1   5   0 751   2]
+ [  4   4   6   1 744]]
+
+Per-class test metrics:
+  digit 3: precision 0.9854  recall 0.9750  F1 0.9801
+  digit 4: precision 0.9856  recall 0.9908  F1 0.9882
+  digit 5: precision 0.9751  recall 0.9789  F1 0.9770
+  digit 7: precision 0.9869  recall 0.9895  F1 0.9882
+  digit 8: precision 0.9815  recall 0.9802  F1 0.9809

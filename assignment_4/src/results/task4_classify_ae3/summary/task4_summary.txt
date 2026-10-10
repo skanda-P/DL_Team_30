@@ -1,0 +1,18 @@
+Task 4 summary: 3-hidden-layer autoencoder codes + FCNN classification
+==============================================================================
+  Dim Best arch (by val acc)    Val acc  Test acc  Macro F1
+------------------------------------------------------------------------------
+   32 arch_4l_v1                 98.74%    98.55%    98.55%
+   64 arch_4l_v3                 98.58%    98.37%    98.37%
+  128 arch_4l_v3                 98.55%    98.31%    98.31%
+  256 arch_4l_v3                 98.50%    98.08%    98.08%
+
+(c) Best reduced dimension (highest test accuracy): 32  -> 98.55% test accuracy with arch_4l_v1 [512, 256, 128, 64]
+
+(d) Comparison (test accuracy, %):
+    Assignment 3 (raw 784 pixels, arch_4l_v3): 98.02
+      Dim  Task 4 (AE-3)   Task 1 (PCA)  Task 3 (AE-1)    vs A3
+       32          98.55          98.47          98.50    +0.53
+       64          98.37          98.18          98.37    +0.35
+      128          98.31          98.00          98.00    +0.29
+      256          98.08          97.81          98.29    +0.06

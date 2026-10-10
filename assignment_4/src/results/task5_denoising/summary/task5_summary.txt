@@ -1,0 +1,18 @@
+Task 5 summary: denoising autoencoders (1 hidden layer, bottleneck 32) + FCNN classification
+======================================================================================
+Noise: each feature corrupted with probability p in every epoch; type=gaussian, std=0.5, clip to [0,1]=True
+
+Average reconstruction error (MSE vs clean image):
+  Model                  Input        Train        Val       Test
+  --------------------------------------------------------------
+  Task 2 plain AE        clean     0.009258   0.010007   0.009970
+  DAE 20% noise          clean     0.009856   0.010416   0.010296
+  DAE 20% noise          noisy     0.011135   0.011659   0.011554
+  DAE 40% noise          clean     0.011323   0.011843   0.011691
+  DAE 40% noise          noisy     0.012833   0.013302   0.013161
+
+FCNN classification on the 32-dim codes (arch_3l_v1 [512, 256, 128], same as Task 3's best for this dimension):
+  Representation           Val acc  Test acc  Macro F1  vs Task 3
+  Task 3 plain AE           98.66%    98.50%    98.50%          -
+  DAE 20% noise             98.66%    98.66%    98.66%      +0.16
+  DAE 40% noise             98.71%    98.66%    98.66%      +0.16
