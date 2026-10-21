@@ -1,0 +1,37 @@
+[
+  {
+    "class": "butterfly",
+    "channel": 376,
+    "row": 9,
+    "col": 3,
+    "activation": 368.1682434082031
+  },
+  {
+    "class": "car_side",
+    "channel": 450,
+    "row": 7,
+    "col": 3,
+    "activation": 137.93772888183594
+  },
+  {
+    "class": "grand_piano",
+    "channel": 276,
+    "row": 0,
+    "col": 1,
+    "activation": 157.0835723876953
+  },
+  {
+    "class": "scorpion",
+    "channel": 104,
+    "row": 5,
+    "col": 9,
+    "activation": 130.39395141601562
+  },
+  {
+    "class": "starfish",
+    "channel": 498,
+    "row": 9,
+    "col": 9,
+    "activation": 59.839786529541016
+  }
+]

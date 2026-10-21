@@ -1,0 +1,176 @@
+# Assignment 5 Setup and Execution Guide
+
+## 1. Directory Structure
+
+```
+assignment_5/
+├── CS601T_Assignment5_Details_12October2026.pdf
+└── src/
+    ├── data/
+    │   ├── mnist_subset/            <- MNIST 5 classes (3, 4, 5, 7, 8)
+    │   ├── caltech101_subset/       <- Raw Caltech-101 images
+    │   └── caltech101_resized/      <- Pre-resized 224x224 RGB images
+    ├── models/                      <- Checkpoints (mnist_cnn.pth, caltech_best.pth)
+    ├── results/
+    │   ├── partA/                   <- Figures and JSON metrics for MNIST experiments
+    │   │   ├── filters/             <- Dedicated folder with each filter saved individually with cell values
+    │   │   │   ├── single_filter_kernel.png
+    │   │   │   ├── stacked_conv1_filter_{1..3}.png & stacked_conv2_filter_{1..3}.png
+    │   │   │   ├── trained_conv1_filter_{1..6}.png
+    │   │   │   └── trained_conv2_filter_{1..16}.png
+    │   │   ├── feature_maps/        <- Atomic feature maps per class and compact report-friendly grids
+    │   │   │   ├── class_{class}/   <- Individual atomic feature maps (Conv1, Conv2, Pool, RF patches)
+    │   │   │   ├── stacked_features_{class}_conv{1,2}_relu.png (clean 1x3 strips)
+    │   │   │   └── trained_features_{class}_conv{1,2}.png (clean 2x3 and 2x5 grids)
+    │   │   ├── single_filter_{class}.png (distinct 3-panel per class with annotated filter values)
+    │   │   ├── receptive_field_patch_{class}.png (distinct per class with bounding boxes)
+    │   │   └── mnist_training_curves.png & mnist_confusion_matrices.png
+    │   └── partB/                   <- Figures and JSON metrics for Caltech-101
+    │       ├── normal_sgd/          <- Standard SGD (lr=0.01, momentum=0.0)
+    │       │   ├── arch{1,2,3}_{train,val,test}_confusion_matrix.png (separate atomic images)
+    │       │   ├── arch{1,2,3}_training_curves.png
+    │       │   ├── {best_arch}_feature_maps.png
+    │       │   └── custom_cnn_rf_patch_{class}.png (distinct 2-panel per class)
+    │       ├── sgd_momentum/        <- SGD with Momentum (lr=0.01, momentum=0.9)
+    │       ├── sgd_high_lr/         <- SGD with Higher LR (lr=0.05, momentum=0.0)
+    │       ├── custom_cnn_9_experiments_summary.png & custom_cnn_9_experiments_summary.json
+    │       ├── architecture_comparison_metrics.json (best overall model for VGG19 comparison)
+    │       └── vgg19/               <- VGG19 transfer learning, Guided Backprop, and Grad-CAM
+    │           ├── vgg19_{train,val,test}_confusion_matrix.png
+    │           ├── q1_q2_test_comparison.png & q1_q2_test_comparison.json
+    │           ├── vgg19_rf_patch_{class}.png (distinct per class)
+    │           ├── guided_backprop_neuron_{idx}_ch_{ch}.png (distinct 4-panel per neuron)
+    │           ├── guided_backprop_ch{ch}_{overlay,saliency,rgb}.png (standalone images)
+    │           └── gradcam/         <- 25 individual Grad-CAM heatmaps and overlays (no grids)
+    │               ├── {input}_explains_{target}.png (distinct 3-panel per pair)
+    │               └── {input}_explains_{target}_overlay.png (standalone overlay)
+    ├── utils/                       <- Utility modules
+    │   ├── metrics.py               <- Accuracy and confusion matrix computation
+    │   ├── plotting.py              <- Visual plotting routines (annotated filter values, distinct plots)
+    │   ├── receptive_field.py       <- Analytical receptive field and bounding box calculation
+    │   ├── seed.py                  <- Reproducible random seed utility
+    │   └── select_images.py         <- Image selection helper
+    ├── part_a.py                    <- MNIST convolutional pipeline
+    ├── part_b.py                    <- Caltech-101 custom CNN architecture pipeline
+    ├── part_b_vgg.py                <- TensorFlow Keras VGG19 and XAI pipeline
+    ├── requirements.txt             <- Dependencies
+    └── setup_guide.md
+```
+
+---
+
+## 2. Environment Setup
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+## 3. Running the Code
+
+### MNIST Convolutional Neural Network Pipeline (`part_a.py`)
+Run the complete pipeline:
+```powershell
+python part_a.py
+```
+Or run individual stages via the `--pipeline` flag:
+```powershell
+python part_a.py --pipeline single_filter
+python part_a.py --pipeline stacked_layers
+python part_a.py --pipeline classifier --epochs 15
+```
+
+Generated outputs in `results/partA/`:
+- `filters/`: Dedicated folder with each filter saved individually with cell weight values
+  - `single_filter_kernel.png`: Single 5x5 filter with exact cell weight values
+  - `stacked_conv1_filter_{1..3}.png`: Individual Conv1 filters with cell weight values
+  - `stacked_conv2_filter_{1..3}.png`: Individual Conv2 filters with cell weight values
+  - `trained_conv1_filter_{1..6}.png`: All 6 trained Conv1 filters saved individually with cell values
+  - `trained_conv2_filter_{1..16}.png`: All 16 trained Conv2 filters saved individually with cell values
+- `feature_maps/`: Atomic feature maps per class and compact report-friendly grids
+  - `class_{class}/`: Atomic standalone images (`trained_conv1_f{1..6}.png`, `trained_conv2_f{1..16}.png`, `rf_patch_rank{1..5}_ch{ch}.png`, etc.)
+  - `stacked_features_{class}_conv{1,2}_relu.png`: Clean 1x3 strips for quick comparison
+  - `trained_features_{class}_conv1.png`: Clean 2x3 grid (6 filters)
+  - `trained_features_{class}_conv2.png`: Clean 2x5 grid (10 filters)
+- `single_filter_{class}.png`: Distinct 3-panel plot per class (Input | 5x5 Filter Heatmap with Cell Values | Feature Map)
+- `single_filter_observations.json`
+- `stacked_feature_maps.npz` & `stacked_convolution_observations.json`
+- `mnist_training_curves.png` & `mnist_confusion_matrices.png` & `mnist_metrics.json`
+- `receptive_field_patch_{class}.png`: Distinct receptive field patch plot for each class
+- `receptive_field_patch_info.json`
+- `models/mnist_cnn.pth`
+
+---
+
+### Caltech-101 Custom CNN Architecture Benchmark (`part_b.py`)
+Run all 9 experiments (3 Architectures × 3 SGD configurations) with dynamic convergence / Early Stopping:
+```powershell
+python part_b.py --config all --max_epochs 100 --patience 15
+```
+Or run a single configuration (3 experiments):
+```powershell
+python part_b.py --config normal_sgd
+python part_b.py --config sgd_momentum
+python part_b.py --config sgd_high_lr
+```
+
+Generated outputs in `results/partB/`:
+- `normal_sgd/`: Complete artifacts for standard SGD (`lr=0.01, momentum=0.0`)
+- `sgd_momentum/`: Complete artifacts for SGD with momentum (`lr=0.01, momentum=0.9`)
+- `sgd_high_lr/`: Complete artifacts for SGD with high LR (`lr=0.05, momentum=0.0`)
+  - Each directory contains:
+    - `arch{1,2,3}_architecture.md`: Model architecture layer tables
+    - `arch{1,2,3}_train_confusion_matrix.png`: Separate individual train confusion matrix
+    - `arch{1,2,3}_val_confusion_matrix.png`: Separate individual validation confusion matrix
+    - `arch{1,2,3}_test_confusion_matrix.png`: Separate individual test confusion matrix
+    - `arch{1,2,3}_training_curves.png`: Loss and validation accuracy trajectories with best checkpoint marker
+    - `{best_arch}_feature_maps.png`: Layerwise feature maps for representative image
+    - `custom_cnn_rf_patch_{class}.png`: Distinct 2-panel RF patch localization for each class
+    - `custom_cnn_patch_info.json`
+    - `architecture_comparison_metrics.json`
+- `custom_cnn_9_experiments_summary.png`: Consolidated master publication figure comparing all 9 experiments (grouped test accuracy bar chart and detailed empirical results table)
+- `custom_cnn_9_experiments_summary.json`: Complete numerical record of all 9 experiments (learning rates, momentum, epochs to converge, train/val/test accuracies, and confusion matrices)
+- `architecture_comparison_metrics.json`: Top-performing model metrics across all 9 experiments for seamless VGG19 comparative analysis
+- `models/caltech_best.pth`: Best overall model weights across all 9 experiments
+
+---
+
+### VGG19 Transfer Learning & Interpretability (`part_b_vgg.py`)
+Run VGG19 transfer learning with TensorFlow Keras and Early Stopping:
+```powershell
+python part_b_vgg.py --epochs 30 --patience 8
+```
+
+Generated outputs in `results/partB/vgg19/`:
+- `vgg19_{train,val,test}_confusion_matrix.png`: Separate individual confusion matrices for each split
+- `vgg19_training_curves.png`: Training & validation loss and accuracy progression
+- `vgg19_metrics.json`
+- `custom_cnn_vs_vgg19_test_comparison.png` & `custom_cnn_vs_vgg19_test_comparison.json`: Best Custom CNN vs VGG19 comparison
+- `vgg19_rf_patch_{class}.png`: Distinct 2-panel receptive field patch plot for each class
+- `vgg19_rf_patch_info.json`
+- `guided_backprop_neuron_{idx}_ch_{ch}.png`: Distinct 4-panel card for each neuron (Input | RGB Gradient | Saliency | Physical Overlay)
+- `guided_backprop_ch{ch}_overlay.png`, `guided_backprop_ch{ch}_saliency.png`, `guided_backprop_ch{ch}_rgb.png`: Standalone full-resolution images
+- `guided_backprop_info.json`
+- `gradcam/`:
+  - 25 distinct individual 3-panel figures: `{input_class}_explains_{target_class}.png`
+  - 25 standalone individual overlay images: `{input_class}_explains_{target_class}_overlay.png`
+  - (No composite heatmap grids generated)
+
+---
+
+## 4. Technical Notes
+
+- **Filter Visualizations**: All filter heatmaps annotate the actual numerical weights on each cell with high-contrast text for direct legibility.
+- **Image Resizing**: Both `part_b.py` and `part_b_vgg.py` source from `data/caltech101_resized` (pre-resized 224x224 RGB images) with fallback to `caltech101_subset`.
+- **Softmax & Logits**: The CNN classifiers output raw logits and use `CrossEntropyLoss` / `SparseCategoricalCrossentropy(from_logits=True)`. Softmax is applied implicitly by the loss function for numerical stability.
+- **Reproducibility**: The fixed random seed is set to `42` across Python, NumPy, PyTorch, and TensorFlow.
+- **Receptive Field**: The reported "last convolutional layer" is the convolution output before pooling: 14x14 for MNIST Part A, 51x51 for Caltech Part B custom architectures, and 252x252 for VGG19 (clipped to 224x224 input).
+
+---
+
+## 5. Submission Packaging
+
+- Code directory: `Group30_Assignment5_code/`
+- Zip archive: `Group30_Assignment5_code.zip`
+- Final Report: `Group30_Assignment5_report.pdf`
