@@ -116,11 +116,12 @@ class HierarchicalCaltechCNN(nn.Module):
         "arch3": [(8, 11, 4, True), (16, 5, 1, True), (32, 3, 1, False), (64, 3, 1, True)],
     }
 
-    def __init__(self, architecture: str = "arch1", num_classes: int = 5):
+    def __init__(self, architecture: str = "arch1", num_classes: int = 5, dropout: float = 0.5):
         super().__init__()
         if architecture not in self.CONFIGS:
             raise ValueError(f"Unsupported architecture: {architecture}")
         self.architecture = architecture
+        self.dropout = dropout
         feature_layers: list[nn.Module] = []
         channels = 3
         for output_channels, kernel, stride, pool in self.CONFIGS[architecture]:
@@ -132,7 +133,11 @@ class HierarchicalCaltechCNN(nn.Module):
         with torch.no_grad():
             feature_dim = self.features(torch.zeros(1, 3, 224, 224)).flatten(1).shape[1]
         self.classifier = nn.Sequential(
-            nn.Flatten(), nn.Linear(feature_dim, 128), nn.ReLU(), nn.Linear(128, num_classes)
+            nn.Flatten(),
+            nn.Linear(feature_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(dropout),  # regularization: active only in model.train()
+            nn.Linear(128, num_classes),
         )
         initialize_weights(self)
 
@@ -165,7 +170,7 @@ def describe_architecture(model: HierarchicalCaltechCNN, device: torch.device) -
             elif isinstance(layer, nn.MaxPool2d):
                 rows.append((f"MaxPool{conv_index}", tuple(x.shape[1:]), 0))
     flat = x.flatten(1).shape[1]
-    fc1, fc2 = model.classifier[1], model.classifier[3]
+    fc1, fc2 = model.classifier[1], model.classifier[4]
     rows.extend([
         ("Flatten", (flat,), 0),
         ("FC1 + ReLU", (fc1.out_features,), sum(p.numel() for p in fc1.parameters())),
@@ -235,10 +240,11 @@ def train_single_model(
     patience: int = 15,
     min_delta: float = 1e-4,
     device: torch.device = torch.device("cpu"),
+    dropout: float = 0.5,
 ) -> dict:
     """Train a single architecture using the Adam optimizer with early stopping."""
     set_seed(42)
-    model = HierarchicalCaltechCNN(architecture).to(device)
+    model = HierarchicalCaltechCNN(architecture, dropout=dropout).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
 
@@ -320,6 +326,7 @@ def train_single_model(
         "optimizer": "Adam",
         "lr": lr,
         "weight_decay": weight_decay,
+        "dropout": dropout,
         "param_count": param_count,
         "total_epochs_run": converged_epoch,
         "best_epoch": best_epoch,
@@ -652,7 +659,14 @@ def main():
     parser.add_argument("--patience", type=int, default=15, help="Early stopping patience in epochs (default: 15)")
     parser.add_argument("--lr", type=float, default=0.001, help="Adam learning rate (default: 0.001)")
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="Adam weight decay (default: 1e-4)")
+    parser.add_argument("--dropout", type=float, default=0.5, help="Dropout probability after FC1 (default: 0.5; 0 disables)")
     args = parser.parse_args()
+
+    # Keep each dropout setting in its own folders so runs do not overwrite each other
+    global CUSTOM_RESULTS_DIR, MODELS_DIR
+    run_tag = f"dropout{args.dropout:g}"
+    CUSTOM_RESULTS_DIR = RESULTS_DIR / "custom_cnn" / run_tag
+    MODELS_DIR = ROOT / "models" / run_tag
 
     set_seed(42)
     CUSTOM_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -670,13 +684,14 @@ def main():
     arch_results = {}
     for architecture in ("arch1", "arch2", "arch3"):
         # Save architecture markdown specification
-        temp_model = HierarchicalCaltechCNN(architecture).to(device)
+        temp_model = HierarchicalCaltechCNN(architecture, dropout=args.dropout).to(device)
         (CUSTOM_RESULTS_DIR / f"{architecture}_architecture.md").write_text(
             describe_architecture(temp_model, device), encoding="utf-8"
         )
 
         exp = train_single_model(
-            architecture, loaders, args.lr, args.weight_decay, args.max_epochs, args.patience, 1e-4, device
+            architecture, loaders, args.lr, args.weight_decay, args.max_epochs, args.patience, 1e-4, device,
+            dropout=args.dropout,
         )
         arch_results[architecture] = exp
 
