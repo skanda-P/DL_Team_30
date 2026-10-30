@@ -26,15 +26,16 @@ assignment_5/
     │   │   ├── receptive_field_patch_{class}.png (distinct per class with bounding boxes)
     │   │   └── mnist_training_curves.png & mnist_confusion_matrices.png
     │   └── partB/                   <- Figures and JSON metrics for Caltech-101
-    │       ├── normal_sgd/          <- Standard SGD (lr=0.01, momentum=0.0)
+    │       ├── custom_cnn/          <- Custom CNN benchmarks with Adam optimizer (lr=0.001)
+    │       │   ├── arch{1,2,3}_architecture.md (layer table with output shapes and parameter counts)
     │       │   ├── arch{1,2,3}_{train,val,test}_confusion_matrix.png (separate atomic images)
-    │       │   ├── arch{1,2,3}_training_curves.png
-    │       │   ├── {best_arch}_feature_maps.png
-    │       │   └── custom_cnn_rf_patch_{class}.png (distinct 2-panel per class)
-    │       ├── sgd_momentum/        <- SGD with Momentum (lr=0.01, momentum=0.9)
-    │       ├── sgd_high_lr/         <- SGD with Higher LR (lr=0.05, momentum=0.0)
-    │       ├── custom_cnn_9_experiments_summary.png & custom_cnn_9_experiments_summary.json
-    │       ├── architecture_comparison_metrics.json (best overall model for VGG19 comparison)
+    │       │   ├── arch{1,2,3}_training_curves.png (loss & validation accuracy curves)
+    │       │   ├── {best_arch}_feature_maps.png (first conv + remaining conv layers)
+    │       │   ├── custom_cnn_rf_patch_{class}.png (distinct 2-panel per class with bounding boxes)
+    │       │   ├── custom_cnn_patch_info.json
+    │       │   ├── custom_cnn_architectures_summary.png & custom_cnn_architectures_summary.json
+    │       │   └── architecture_comparison_metrics.json
+    │       ├── architecture_comparison_metrics.json (mirrored at root for VGG19 comparison)
     │       └── vgg19/               <- VGG19 transfer learning, Guided Backprop, and Grad-CAM
     │           ├── vgg19_{train,val,test}_confusion_matrix.png
     │           ├── q1_q2_test_comparison.png & q1_q2_test_comparison.json
@@ -185,35 +186,25 @@ Generated outputs in `results/partA/`:
 ---
 
 ### Caltech-101 Custom CNN Architecture Benchmark (`part_b.py`)
-Run all 9 experiments (3 Architectures × 3 SGD configurations) with dynamic convergence / Early Stopping:
+Run all three custom CNN architectures using the Adam optimizer with dynamic convergence / Early Stopping:
 ```powershell
-python part_b.py --config all --max_epochs 100 --patience 15
-```
-Or run a single configuration (3 experiments):
-```powershell
-python part_b.py --config normal_sgd
-python part_b.py --config sgd_momentum
-python part_b.py --config sgd_high_lr
+python part_b.py --max_epochs 100 --patience 15 --lr 0.001
 ```
 
-Generated outputs in `results/partB/`:
-- `normal_sgd/`: Complete artifacts for standard SGD (`lr=0.01, momentum=0.0`)
-- `sgd_momentum/`: Complete artifacts for SGD with momentum (`lr=0.01, momentum=0.9`)
-- `sgd_high_lr/`: Complete artifacts for SGD with high LR (`lr=0.05, momentum=0.0`)
-  - Each directory contains:
-    - `arch{1,2,3}_architecture.md`: Model architecture layer tables
-    - `arch{1,2,3}_train_confusion_matrix.png`: Separate individual train confusion matrix
-    - `arch{1,2,3}_val_confusion_matrix.png`: Separate individual validation confusion matrix
-    - `arch{1,2,3}_test_confusion_matrix.png`: Separate individual test confusion matrix
-    - `arch{1,2,3}_training_curves.png`: Loss and validation accuracy trajectories with best checkpoint marker
-    - `{best_arch}_feature_maps.png`: Layerwise feature maps for representative image
-    - `custom_cnn_rf_patch_{class}.png`: Distinct 2-panel RF patch localization for each class
-    - `custom_cnn_patch_info.json`
-    - `architecture_comparison_metrics.json`
-- `custom_cnn_9_experiments_summary.png`: Consolidated master publication figure comparing all 9 experiments (grouped test accuracy bar chart and detailed empirical results table)
-- `custom_cnn_9_experiments_summary.json`: Complete numerical record of all 9 experiments (learning rates, momentum, epochs to converge, train/val/test accuracies, and confusion matrices)
-- `architecture_comparison_metrics.json`: Top-performing model metrics across all 9 experiments for seamless VGG19 comparative analysis
-- `models/caltech_best.pth`: Best overall model weights across all 9 experiments
+Generated outputs in `results/partB/custom_cnn/`:
+- `arch{1,2,3}_architecture.md`: Model architecture layer tables detailing exact output shapes and parameter counts
+- `arch{1,2,3}_train_confusion_matrix.png`: Separate individual train confusion matrix
+- `arch{1,2,3}_val_confusion_matrix.png`: Separate individual validation confusion matrix
+- `arch{1,2,3}_test_confusion_matrix.png`: Separate individual test confusion matrix
+- `arch{1,2,3}_training_curves.png`: Loss and validation accuracy trajectories with best checkpoint marker
+- `{best_arch}_feature_maps.png`: Layerwise feature maps for representative image (8 from Conv1 and 8 from remaining conv layers)
+- `custom_cnn_rf_patch_{class}.png`: Distinct 2-panel RF patch localization for each class with bounding boxes
+- `custom_cnn_patch_info.json`: Analytical receptive field and bounding box coordinates for each class
+- `custom_cnn_architectures_summary.png`: Consolidated master publication figure comparing all 3 architectures under Adam (grouped train/val/test accuracy bar chart and detailed empirical results table)
+- `custom_cnn_architectures_summary.json`: Complete numerical record of all 3 architectures (learning rates, epochs to converge, train/val/test accuracies, and confusion matrices)
+- `architecture_comparison_metrics.json`: Top-performing model metrics across architectures for seamless VGG19 comparative analysis
+- `models/caltech_best.pth`: Best overall model weights (ARCH1)
+- `models/caltech_{arch1,arch2,arch3}.pth`: Saved weights for each individual architecture
 
 ---
 

@@ -4,7 +4,7 @@
 **Team**: Group 30  
 **Tasks**:
 - **Part A**: Convolutional layers, feature hierarchies, receptive fields, and supervised CNN classification on MNIST subset.
-- **Part B**: Custom CNN architecture search (3 architectures x 3 SGD variants = 9 benchmark experiments) on Caltech-101 subset.
+- **Part B**: Custom CNN architecture search (3 architectures evaluated with Adam optimizer) on Caltech-101 subset.
 - **Part B (VGG19 & Interpretability)**: VGG19 Transfer Learning, Receptive Field localization, Guided Backpropagation (RGB gradients, saliency maps, physical overlays), and Grad-CAM 5x5 pair explanations.
 
 ---
@@ -64,8 +64,8 @@ pip install -r requirements.txt
 # Run MNIST pipeline (Part A)
 python part_a.py
 
-# Run Caltech-101 Custom CNN Benchmarks (Part B - 9 experiments)
-python part_b.py --config all --max_epochs 100 --patience 15
+# Run Caltech-101 Custom CNN Benchmarks (Part B - Adam optimizer)
+python part_b.py --max_epochs 100 --patience 15 --lr 0.001
 
 # Run VGG19 Transfer Learning & Explainable AI (Part B - VGG19)
 python part_b_vgg.py --epochs 30 --patience 8
