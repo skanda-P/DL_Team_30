@@ -30,6 +30,7 @@ from utils.metrics import evaluate_split
 from utils.plotting import (
     plot_compact_feature_grid,
     plot_distinct_receptive_field_patch,
+    plot_filter_images,
     plot_training_curves,
     save_atomic_feature_map,
     save_individual_filter,
@@ -400,6 +401,16 @@ def stacked_convolution_analysis(
             f"Stacked Conv2 Filter {idx+1} (5x5, Mean over in-ch)",
         )
 
+    # Save consolidated plot of Q2 filters (3 from Conv1 and 3 from Conv2)
+    plot_filter_images(
+        conv1_w,
+        conv2_w,
+        selected_filter_indices,
+        selected_filter_indices,
+        RESULTS_DIR / "stacked_filters.png",
+        "Stacked Convolution Filters (3 from Conv1, 3 from Conv2)",
+    )
+
     # Save atomic and compact feature maps for each class
     for i, cname in enumerate(class_names):
         class_dir = FMAPS_DIR / f"class_{cname}"
@@ -626,6 +637,16 @@ def train_classifier_and_visualize_features(
             f"Trained Conv2 Filter {ch+1} (5x5, Mean over in-ch)",
         )
 
+    # Save consolidated plot of Q3b filters (Conv1: 6 filters, Conv2: first 10 filters)
+    plot_filter_images(
+        model.conv1.weight,
+        model.conv2.weight,
+        idx1,
+        idx2,
+        RESULTS_DIR / "trained_filters.png",
+        "Trained Convolutional Filters (Conv1: 6 Filters, Conv2: First 10 Filters)",
+    )
+
     # ========================================================================
     # Atomic and Compact Feature Maps (Saved in results/partA/feature_maps/)
     # ========================================================================
@@ -671,8 +692,6 @@ def train_classifier_and_visualize_features(
 
     # Clean up obsolete composite files from earlier iterations
     for obsolete_file in [
-        RESULTS_DIR / "trained_filters.png",
-        RESULTS_DIR / "stacked_filters.png",
         RESULTS_DIR / "single_filter_convolution.png",
         RESULTS_DIR / "stacked_feature_maps_after_pool.png",
         RESULTS_DIR / "stacked_feature_maps_after_relu.png",

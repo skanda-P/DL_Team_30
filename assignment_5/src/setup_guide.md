@@ -59,7 +59,88 @@ assignment_5/
 
 ---
 
-## 2. Environment Setup
+## 2. Dataset Setup & Folder Placement (Required for Reproduction)
+
+Because large image datasets and model weights are excluded from Git tracking via `.gitignore` (to keep the GitHub repository fast and under size limits), anyone cloning this repository must place the datasets inside `src/data/` as instructed below before running the code.
+
+> **Note on GitHub Tracking**: All experimental output figures, metrics, confusion matrices, and visualizations in `src/results/` **are committed and pushed to GitHub**. Only the raw images in `src/data/` and weights in `src/models/` must be placed locally.
+
+### A. Part A: MNIST 5-Class Subset (`src/data/mnist_subset/`)
+- **Assigned Classes (Group 30)**: `3`, `4`, `5`, `7`, `8` (same digit subset from Assignment 3 & 4).
+- **Directory Layout**: PyTorch `torchvision.datasets.ImageFolder` expects the dataset to be organized into three split directories (`train`, `val`, `test`), each containing subdirectories named after the respective class label:
+
+```
+src/data/mnist_subset/
+├── train/
+│   ├── 3/          <- 2,277 grayscale images (28x28)
+│   ├── 4/          <- 2,277 grayscale images (28x28)
+│   ├── 5/          <- 2,277 grayscale images (28x28)
+│   ├── 7/          <- 2,277 grayscale images (28x28)
+│   └── 8/          <- 2,277 grayscale images (28x28)
+├── val/
+│   ├── 3/          <- 759 grayscale images (28x28)
+│   ├── 4/          <- 759 grayscale images (28x28)
+│   ├── 5/          <- 759 grayscale images (28x28)
+│   ├── 7/          <- 759 grayscale images (28x28)
+│   └── 8/          <- 759 grayscale images (28x28)
+└── test/
+    ├── 3/          <- 759 grayscale images (28x28)
+    ├── 4/          <- 759 grayscale images (28x28)
+    ├── 5/          <- 759 grayscale images (28x28)
+    ├── 7/          <- 759 grayscale images (28x28)
+    └── 8/          <- 759 grayscale images (28x28)
+```
+- **Total Images**: 18,975 images across all three splits (60% train / 20% validation / 20% test).
+- **Supported Formats**: `.png`, `.jpg`, `.jpeg`. Images are converted to single-channel tensor grayscale (`1 x 28 x 28`) automatically.
+
+---
+
+### B. Part B: Caltech-101 5-Class Subset (`src/data/caltech101_subset/`)
+- **Assigned Classes (Group 30)**: `butterfly`, `car_side`, `grand_piano`, `scorpion`, `starfish`.
+- **Directory Layout**: Both PyTorch (`part_b.py`) and TensorFlow Keras (`part_b_vgg.py`) expect the standard `ImageFolder` / `image_dataset_from_directory` format:
+
+```
+src/data/caltech101_subset/
+├── train/
+│   ├── butterfly/    <- 50 raw RGB images (varying resolutions)
+│   ├── car_side/     <- 50 raw RGB images (varying resolutions)
+│   ├── grand_piano/  <- 50 raw RGB images (varying resolutions)
+│   ├── scorpion/     <- 50 raw RGB images (varying resolutions)
+│   └── starfish/     <- 50 raw RGB images (varying resolutions)
+├── val/
+│   ├── butterfly/    <- 10 raw RGB images (varying resolutions)
+│   ├── car_side/     <- 10 raw RGB images (varying resolutions)
+│   ├── grand_piano/  <- 10 raw RGB images (varying resolutions)
+│   ├── scorpion/     <- 10 raw RGB images (varying resolutions)
+│   └── starfish/     <- 10 raw RGB images (varying resolutions)
+└── test/
+    ├── butterfly/    <- 20 raw RGB images (varying resolutions)
+    ├── car_side/     <- 20 raw RGB images (varying resolutions)
+    ├── grand_piano/  <- 20 raw RGB images (varying resolutions)
+    ├── scorpion/     <- 20 raw RGB images (varying resolutions)
+    └── starfish/     <- 20 raw RGB images (varying resolutions)
+```
+- **Total Images**: 400 images (250 train / 50 validation / 100 test).
+- **Raw Images vs Pre-Resized Cache (`caltech101_resized/`)**:
+  - **Option 1 (Default / Simplest)**: Simply place your raw images in `src/data/caltech101_subset/`. Both `part_b.py` and `part_b_vgg.py` automatically detect this folder and resize all images to `224x224` dynamically during batch loading.
+  - **Option 2 (Pre-resized Cache for Fast Training)**: To skip on-the-fly resizing during training, run:
+    ```powershell
+    python verify_dataset.py --resize_caltech
+    ```
+    This automatically generates `src/data/caltech101_resized/` with all images saved at `224x224` resolution.
+
+---
+
+### C. Automated Dataset Verification
+To verify that all folders and classes are correctly placed and formatted, run:
+```powershell
+python verify_dataset.py
+```
+This script validates split existence, class folder names, image file extensions, and reports exact image counts.
+
+---
+
+## 3. Environment Setup
 
 ```powershell
 pip install -r requirements.txt
@@ -67,7 +148,7 @@ pip install -r requirements.txt
 
 ---
 
-## 3. Running the Code
+## 4. Running the Code
 
 ### MNIST Convolutional Neural Network Pipeline (`part_a.py`)
 Run the complete pipeline:
@@ -159,7 +240,7 @@ Generated outputs in `results/partB/vgg19/`:
 
 ---
 
-## 4. Technical Notes
+## 5. Technical Notes
 
 - **Filter Visualizations**: All filter heatmaps annotate the actual numerical weights on each cell with high-contrast text for direct legibility.
 - **Image Resizing**: Both `part_b.py` and `part_b_vgg.py` source from `data/caltech101_resized` (pre-resized 224x224 RGB images) with fallback to `caltech101_subset`.
@@ -169,7 +250,7 @@ Generated outputs in `results/partB/vgg19/`:
 
 ---
 
-## 5. Submission Packaging
+## 6. Submission Packaging
 
 - Code directory: `Group30_Assignment5_code/`
 - Zip archive: `Group30_Assignment5_code.zip`

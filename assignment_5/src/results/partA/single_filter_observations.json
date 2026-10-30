@@ -1,0 +1,67 @@
+{
+  "classes": [
+    "3",
+    "4",
+    "5",
+    "7",
+    "8"
+  ],
+  "sample_paths": [
+    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\3\\img_10004.jpg",
+    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\4\\img_10020.jpg",
+    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\5\\img_10001.jpg",
+    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\7\\img_10015.jpg",
+    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\8\\img_10.jpg"
+  ],
+  "input_shape": [
+    5,
+    1,
+    28,
+    28
+  ],
+  "filter_weights": [
+    [
+      0.05487680435180664,
+      0.6113287806510925,
+      -0.04866315424442291,
+      0.24015048146247864,
+      -0.5443022847175598
+    ],
+    [
+      0.18469220399856567,
+      -0.18368960916996002,
+      -0.2312309294939041,
+      0.14933091402053833,
+      -0.36072343587875366
+    ],
+    [
+      -0.4701203405857086,
+      -0.08579008281230927,
+      -0.026182714849710464,
+      0.056352779269218445,
+      -0.31690627336502075
+    ],
+    [
+      0.5254252552986145,
+      -0.20209646224975586,
+      0.19462552666664124,
+      0.22537779808044434,
+      -0.009447477757930756
+    ],
+    [
+      0.42192551493644714,
+      -0.14609089493751526,
+      -0.07186919450759888,
+      0.417084276676178,
+      -0.09221728146076202
+    ]
+  ],
+  "expected_spatial": [
+    24,
+    24
+  ],
+  "obtained_spatial": [
+    24,
+    24
+  ]
+}
