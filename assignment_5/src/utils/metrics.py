@@ -9,6 +9,11 @@ import numpy as np
 import torch
 
 
+def predict_proba(logits: torch.Tensor) -> torch.Tensor:
+    """Apply softmax along dimension -1 to convert logits to probabilities."""
+    return torch.nn.functional.softmax(logits, dim=-1)
+
+
 def accuracy(logits: torch.Tensor, labels: torch.Tensor) -> float:
     """Compute top-1 classification accuracy."""
     preds = logits.argmax(dim=-1)
@@ -35,9 +40,11 @@ def evaluate_split(model: torch.nn.Module, loader, device: torch.device, num_cla
             labels.append(targets)
     all_logits = torch.cat(logits)
     all_labels = torch.cat(labels)
+    probs = predict_proba(all_logits)
+    preds = probs.argmax(dim=-1)
     return (
-        accuracy(all_logits, all_labels),
-        confusion_matrix(all_logits.argmax(dim=-1), all_labels, num_classes),
+        accuracy(probs, all_labels),
+        confusion_matrix(preds, all_labels, num_classes),
     )
 
 

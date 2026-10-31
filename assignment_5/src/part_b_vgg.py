@@ -303,9 +303,14 @@ def run_explanations(model, raw, pre, class_names):
         input_class = class_names[image_index]
         orig_img_norm = raw[image_index] / 255.0
         convolution = conv_model(image[None], training=False)
+        full_logits = classifier(convolution, training=False)
+        probs = tf.nn.softmax(full_logits, axis=-1).numpy()[0]
+        pred_class_idx = int(np.argmax(probs))
+        predicted_class = class_names[pred_class_idx]
 
         for class_index in range(NUM_CLASSES):
             target_class = class_names[class_index]
+            target_prob = float(probs[class_index])
             with tf.GradientTape() as tape:
                 tape.watch(convolution)
                 score = classifier(convolution, training=False)[:, class_index]
@@ -329,8 +334,7 @@ def run_explanations(model, raw, pre, class_names):
             ax1.axis("off")
 
             ax2.imshow(heatmap, cmap="jet")
-            pred_score = float(score[0]) if score.shape[0] > 0 else 0.0
-            ax2.set_title(f"Grad-CAM Heatmap (Score: {pred_score:.3f})", fontsize=10)
+            ax2.set_title(f"Grad-CAM Heatmap (P({target_class})={target_prob:.3f}, Pred: {predicted_class})", fontsize=9.5)
             ax2.axis("off")
 
             ax3.imshow(overlay)
@@ -338,7 +342,7 @@ def run_explanations(model, raw, pre, class_names):
             ax3.set_title(f"Overlaid: {target_class} {match_flag}", fontsize=10, color="#007700" if input_class == target_class else "#222222")
             ax3.axis("off")
 
-            fig_cam.suptitle(f"Grad-CAM Localization: Explaining Prediction for '{target_class}' on '{input_class}' Image", fontsize=11)
+            fig_cam.suptitle(f"Grad-CAM Localization: Explaining Prediction for '{target_class}' (Prob: {target_prob:.3f}, Pred: {predicted_class}) on '{input_class}' Image", fontsize=10.5)
             fig_cam.tight_layout()
 
             individual_cam_path = gradcam_dir / f"{input_class}_explains_{target_class}.png"
@@ -352,6 +356,7 @@ def main():
     parser = argparse.ArgumentParser(description="VGG19 Transfer Learning and Visual Interpretability Pipeline")
     parser.add_argument("--epochs", type=int, default=30, help="Maximum epochs for VGG19 classification head training (default: 30)")
     parser.add_argument("--patience", type=int, default=8, help="Early stopping patience (default: 8)")
+    parser.add_argument("--custom_run", type=str, default=None, help="Folder name of overall best custom model")
     args = parser.parse_args()
     set_seed(42)
     keras.utils.set_random_seed(42)
@@ -420,61 +425,6 @@ def main():
             RESULTS_DIR / f"vgg19_{split}_confusion_matrix.png",
         )
     (RESULTS_DIR / "vgg19_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
-
-    # Comparative evaluation with custom CNN architecture
-    custom_metrics_path = RESULTS_DIR.parent / "architecture_comparison_metrics.json"
-    if custom_metrics_path.exists():
-        custom = json.loads(custom_metrics_path.read_text(encoding="utf-8"))
-        best_architecture = custom.get("best_architecture", "arch1")
-        custom_result = custom.get("results", {}).get(best_architecture, {})
-        if custom_result:
-            comparison = {
-                "custom_cnn": {
-                    "architecture": best_architecture,
-                    "test_accuracy": custom_result.get("test_acc", 0.0),
-                    "test_confusion_matrix": custom_result.get("test_cm", []),
-                },
-                "vgg19": {
-                    "test_accuracy": metrics["test"]["accuracy"],
-                    "test_confusion_matrix": metrics["test"]["confusion_matrix"],
-                },
-            }
-            (RESULTS_DIR / "custom_cnn_vs_vgg19_test_comparison.json").write_text(
-                json.dumps(comparison, indent=2), encoding="utf-8"
-            )
-            (RESULTS_DIR / "q1_q2_test_comparison.json").write_text(
-                json.dumps(comparison, indent=2), encoding="utf-8"
-            )
-            figure, axes = plt.subplots(1, 2, figsize=(11, 5))
-            for axis, title, matrix, value in (
-                (axes[0], f"Best Custom CNN: {best_architecture.upper()} ({custom_result.get('test_acc', 0.0) * 100:.1f}%)",
-                 np.asarray(custom_result.get("test_cm", np.zeros((NUM_CLASSES, NUM_CLASSES)))), custom_result.get("test_acc", 0.0)),
-                (axes[1], f"VGG19 Transfer Learning ({metrics['test']['accuracy'] * 100:.1f}%)",
-                 np.asarray(metrics["test"]["confusion_matrix"]), metrics["test"]["accuracy"]),
-            ):
-                axis.imshow(matrix, cmap="Blues")
-                axis.set_title(title, fontsize=10, fontweight="bold")
-                axis.set_xticks(range(len(class_names)), class_names, rotation=35, ha="right")
-                axis.set_yticks(range(len(class_names)), class_names)
-                axis.set_xlabel("Predicted")
-                axis.set_ylabel("True")
-                threshold = matrix.max() / 2 if matrix.max() else 1
-                for row in range(NUM_CLASSES):
-                    for column in range(NUM_CLASSES):
-                        axis.text(
-                            column, row, str(matrix[row, column]),
-                            ha="center", va="center",
-                            color="white" if matrix[row, column] > threshold else "black",
-                            fontweight="bold",
-                        )
-            figure.suptitle("Comparative Test Set Performance: Best Custom CNN vs. Pretrained VGG19", fontsize=12, fontweight="bold")
-            figure.tight_layout()
-            figure.savefig(RESULTS_DIR / "custom_cnn_vs_vgg19_test_comparison.png", dpi=180, bbox_inches="tight")
-            figure.savefig(RESULTS_DIR / "q1_q2_test_comparison.png", dpi=180, bbox_inches="tight")
-            plt.close(figure)
-            print(f"Saved comparative test confusion matrix to {RESULTS_DIR / 'custom_cnn_vs_vgg19_test_comparison.png'}")
-    else:
-        print(f"Notice: {custom_metrics_path} not found. Run part_b.py first to generate the custom vs VGG19 comparison figure.")
 
     raw, pre, representative_names = load_representative_images()
     run_explanations(model, raw, pre, representative_names)

@@ -10,6 +10,7 @@
 | MaxPool4 | (64, 2, 2) | 0 |
 | Flatten | (256,) | 0 |
 | FC1 + ReLU | (128,) | 32,896 |
+| Dropout (p=0.5) | (128,) | 0 |
 | FC2 logits | (5,) | 645 |
 
 Total parameters: 62,805

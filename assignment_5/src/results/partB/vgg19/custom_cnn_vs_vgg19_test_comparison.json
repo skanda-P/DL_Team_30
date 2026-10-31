@@ -1,5 +1,7 @@
 {
   "custom_cnn": {
+    "run_folder": "dropout0.3",
+    "dropout": 0.3,
     "architecture": "arch1",
     "optimizer": "Adam",
     "test_accuracy": 0.7299999594688416,

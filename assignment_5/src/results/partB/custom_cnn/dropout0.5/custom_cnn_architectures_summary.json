@@ -2,14 +2,16 @@
   "optimizer": "Adam",
   "learning_rate": 0.001,
   "weight_decay": 0.0001,
-  "best_architecture": "arch2",
+  "best_architecture": "arch1",
   "overall_best": {
-    "architecture": "arch2",
-    "train_accuracy": 0.9760000705718994,
+    "architecture": "arch1",
+    "train_accuracy": 0.9960000514984131,
     "validation_accuracy": 0.85999995470047,
-    "test_accuracy": 0.8100000023841858,
-    "best_epoch": 26,
-    "param_count": 48405
+    "test_accuracy": 0.7599999904632568,
+    "val_loss": 0.5470757484436035,
+    "best_val_loss": 0.5470757484436035,
+    "best_epoch": 34,
+    "param_count": 211701
   },
   "architectures": {
     "arch1": {
@@ -20,6 +22,8 @@
       "train_accuracy": 0.9960000514984131,
       "validation_accuracy": 0.85999995470047,
       "test_accuracy": 0.7599999904632568,
+      "val_loss": 0.5470757484436035,
+      "best_val_loss": 0.5470757484436035,
       "train_cm": [
         [
           49,
@@ -140,6 +144,8 @@
       "train_accuracy": 0.9760000705718994,
       "validation_accuracy": 0.85999995470047,
       "test_accuracy": 0.8100000023841858,
+      "val_loss": 0.5863754749298096,
+      "best_val_loss": 0.5863754749298096,
       "train_cm": [
         [
           48,
@@ -260,6 +266,8 @@
       "train_accuracy": 0.9320000410079956,
       "validation_accuracy": 0.8399999737739563,
       "test_accuracy": 0.7799999713897705,
+      "val_loss": 0.613472580909729,
+      "best_val_loss": 0.613472580909729,
       "train_cm": [
         [
           46,

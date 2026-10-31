@@ -7,11 +7,11 @@
     "8"
   ],
   "sample_paths": [
-    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\3\\img_10004.jpg",
-    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\4\\img_10020.jpg",
-    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\5\\img_10001.jpg",
-    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\7\\img_10015.jpg",
-    "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_5\\src\\data\\mnist_subset\\train\\8\\img_10.jpg"
+    "mnist_subset/train/3/img_10004.jpg",
+    "mnist_subset/train/4/img_10020.jpg",
+    "mnist_subset/train/5/img_10001.jpg",
+    "mnist_subset/train/7/img_10015.jpg",
+    "mnist_subset/train/8/img_10.jpg"
   ],
   "input_shape": [
     5,

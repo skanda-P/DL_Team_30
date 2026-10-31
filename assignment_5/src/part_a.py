@@ -102,6 +102,11 @@ def expected_stack_shapes(height: int = 28, width: int = 28) -> dict[str, tuple[
 # Device Configuration and Weight Initialization
 # ============================================================================
 
+def predict_proba(logits: torch.Tensor) -> torch.Tensor:
+    """Apply softmax along dimension 1 to compute class probabilities from logits."""
+    return F.softmax(logits, dim=1)
+
+
 def get_device() -> torch.device:
     """Detect and return the active compute device (CUDA GPU if available, else CPU)."""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -111,10 +116,10 @@ def get_device() -> torch.device:
 
 
 def initialize_layer_weights(module: nn.Module) -> None:
-    """Initialize convolutional layers with Kaiming normal and linear layers with Xavier uniform."""
+    """Initialize convolutional layers with Kaiming normal (fan_in) and linear layers with Xavier uniform."""
     for layer in module.modules():
         if isinstance(layer, nn.Conv2d):
-            nn.init.kaiming_normal_(layer.weight, mode="fan_out", nonlinearity="relu")
+            nn.init.kaiming_normal_(layer.weight, mode="fan_in", nonlinearity="relu")
             if layer.bias is not None:
                 nn.init.zeros_(layer.bias)
         elif isinstance(layer, nn.Linear):
@@ -167,32 +172,63 @@ def sample_representative_images(split: str = "train", data_dir: Path = MNIST_DI
 # Convolutional Neural Network Architectures
 # ============================================================================
 
+class ConvReLUPool(nn.Module):
+    """Reusable building block: Conv2d -> ReLU -> MaxPool2d (stride=2)."""
+
+    def __init__(self, in_ch: int, out_ch: int, k: int = 5, pool: int = 2):
+        super().__init__()
+        self.conv = nn.Conv2d(in_ch, out_ch, kernel_size=k, stride=1, padding=0)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=pool, stride=pool)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.pool(self.relu(self.conv(x)))
+
+    def forward_all(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        c = self.conv(x)
+        r = self.relu(c)
+        p = self.pool(r)
+        return c, r, p
+
+
 class TwoStageConvolution(nn.Module):
     """Two-stage convolutional feature extractor with intermediate ReLU activations and max pooling."""
 
     def __init__(self):
         super().__init__()
-        # Stage 1: Conv(1 -> 6, 5x5, stride=1, pad=0) -> ReLU -> MaxPool(2x2, stride=2)
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
-        self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        # Stage 2: Conv(6 -> 16, 5x5, stride=1, pad=0) -> ReLU -> MaxPool(2x2, stride=2)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-
+        # Use ConvReLUPool twice
+        self.stage1 = ConvReLUPool(1, 6, k=5, pool=2)
+        self.stage2 = ConvReLUPool(6, 16, k=5, pool=2)
         initialize_layer_weights(self)
+
+    @property
+    def conv1(self) -> nn.Conv2d:
+        return self.stage1.conv
+
+    @property
+    def relu1(self) -> nn.ReLU:
+        return self.stage1.relu
+
+    @property
+    def pool1(self) -> nn.MaxPool2d:
+        return self.stage1.pool
+
+    @property
+    def conv2(self) -> nn.Conv2d:
+        return self.stage2.conv
+
+    @property
+    def relu2(self) -> nn.ReLU:
+        return self.stage2.relu
+
+    @property
+    def pool2(self) -> nn.MaxPool2d:
+        return self.stage2.pool
 
     def forward(self, x: torch.Tensor):
         """Pass input through both convolutional stages and return activations at all intermediate steps."""
-        c1 = self.conv1(x)
-        r1 = self.relu1(c1)
-        p1 = self.pool1(r1)
-
-        c2 = self.conv2(p1)
-        r2 = self.relu2(c2)
-        p2 = self.pool2(r2)
+        c1, r1, p1 = self.stage1.forward_all(x)
+        c2, r2, p2 = self.stage2.forward_all(p1)
 
         return {
             "conv1": c1,
@@ -209,14 +245,9 @@ class DigitClassifierCNN(nn.Module):
 
     def __init__(self, num_classes: int = 5):
         super().__init__()
-        # Convolutional feature extraction hierarchy
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
-        self.relu1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
-        self.relu2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        # Use ConvReLUPool twice
+        self.stage1 = ConvReLUPool(1, 6, k=5, pool=2)
+        self.stage2 = ConvReLUPool(6, 16, k=5, pool=2)
 
         # Fully connected classification head: Flatten -> Linear(256, 64) -> ReLU -> Linear(64, num_classes)
         self.flatten = nn.Flatten()
@@ -226,23 +257,58 @@ class DigitClassifierCNN(nn.Module):
 
         initialize_layer_weights(self)
 
+    @property
+    def conv1(self) -> nn.Conv2d:
+        return self.stage1.conv
+
+    @property
+    def relu1(self) -> nn.ReLU:
+        return self.stage1.relu
+
+    @property
+    def pool1(self) -> nn.MaxPool2d:
+        return self.stage1.pool
+
+    @property
+    def conv2(self) -> nn.Conv2d:
+        return self.stage2.conv
+
+    @property
+    def relu2(self) -> nn.ReLU:
+        return self.stage2.relu
+
+    @property
+    def pool2(self) -> nn.MaxPool2d:
+        return self.stage2.pool
+
+    def load_state_dict(self, state_dict, strict: bool = True):
+        # Remap legacy keys (conv1 -> stage1.conv, conv2 -> stage2.conv) if present
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            if k.startswith("conv1."):
+                new_state_dict[k.replace("conv1.", "stage1.conv.")] = v
+            elif k.startswith("conv2."):
+                new_state_dict[k.replace("conv2.", "stage2.conv.")] = v
+            else:
+                new_state_dict[k] = v
+        return super().load_state_dict(new_state_dict, strict=strict)
+
     def extract_intermediate_features(self, x: torch.Tensor):
         """Extract intermediate activations for visualization and receptive field analysis."""
-        c1 = self.conv1(x)
-        r1 = self.relu1(c1)
-        p1 = self.pool1(r1)
-
-        c2 = self.conv2(p1)
-        r2 = self.relu2(c2)
-        p2 = self.pool2(r2)
+        c1, r1, p1 = self.stage1.forward_all(x)
+        c2, r2, p2 = self.stage2.forward_all(p1)
         return {"conv1": c1, "relu1": r1, "pool1": p1, "conv2": c2, "relu2": r2, "pool2": p2}
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through feature extractor and dense classification head."""
-        f = self.extract_intermediate_features(x)
-        flat = self.flatten(f["pool2"])
+        p2 = self.stage2(self.stage1(x))
+        flat = self.flatten(p2)
         hidden = self.relu3(self.fc1(flat))
         return self.fc2(hidden)
+
+    def predict_proba(self, x: torch.Tensor) -> torch.Tensor:
+        """Return class probabilities for input tensor x."""
+        return predict_proba(self.forward(x))
 
 
 # ============================================================================
@@ -266,7 +332,7 @@ def single_filter_convolution_analysis(
 
     # Define a single 5x5 convolutional filter
     conv = nn.Conv2d(1, 1, kernel_size=5, stride=1, padding=0, bias=True).to(device)
-    nn.init.kaiming_normal_(conv.weight, mode="fan_out", nonlinearity="relu")
+    nn.init.kaiming_normal_(conv.weight, mode="fan_in", nonlinearity="relu")
     nn.init.zeros_(conv.bias)
 
     filter_w = conv.weight.detach().cpu().squeeze().numpy()
@@ -343,9 +409,17 @@ def single_filter_convolution_analysis(
         plt.close(fig)
 
     # Persist numerical records of filter transformation
+    rel_sample_paths = []
+    for p in paths:
+        p_obj = Path(p)
+        try:
+            rel_sample_paths.append(p_obj.relative_to(ROOT / "data").as_posix())
+        except ValueError:
+            rel_sample_paths.append(p_obj.name)
+
     records = {
         "classes": class_names,
-        "sample_paths": [str(p) for p in paths],
+        "sample_paths": rel_sample_paths,
         "input_shape": list(images.shape),
         "filter_weights": filter_w.tolist(),
         "expected_spatial": [expected_h, expected_w],
@@ -460,13 +534,28 @@ def stacked_convolution_analysis(
             stage_name="Conv2 F",
         )
 
-    # Print representative feature map tensors as requested by assignment
-    torch.set_printoptions(precision=3, linewidth=160, sci_mode=False)
-    for name in ("conv1", "relu1", "pool1", "conv2", "relu2", "pool2"):
-        print(
-            f"\n{name} output, class '{class_names[0]}', channel 1:\n"
-            f"{out[name][0, 0].cpu()}"
-        )
+    # Print and persist feature map tensors after each layer for each of the 5 images
+    torch.set_printoptions(precision=3, linewidth=200)
+    layer_order = ("conv1", "relu1", "pool1", "conv2", "relu2", "pool2")
+    txt_lines: list[str] = [
+        "=" * 80,
+        "FEATURE MAP TENSORS AFTER EACH LAYER (CHANNEL 0 FOR 5 REPRESENTATIVE DIGITS)",
+        "=" * 80,
+    ]
+    for layer in layer_order:
+        header = f"\n=== Layer: {layer} (Full tensor shape: {tuple(out[layer].shape)}) ==="
+        print(header)
+        txt_lines.append(header)
+        for i in range(len(images)):
+            t_slice = out[layer][i, 0].cpu()
+            cname = class_names[i] if i < len(class_names) else f"img_{i}"
+            img_hdr = f"Image {i + 1} (Class '{cname}', Channel 0, Shape: {tuple(t_slice.shape)}):"
+            t_str = str(t_slice)
+            print(f"\n{img_hdr}\n{t_str}")
+            txt_lines.append(f"\n{img_hdr}\n{t_str}")
+
+    (RESULTS_DIR / "stacked_feature_maps.txt").write_text("\n".join(txt_lines), encoding="utf-8")
+    print(f"\nSaved stacked feature maps text output to {RESULTS_DIR / 'stacked_feature_maps.txt'}")
     np.savez(
         RESULTS_DIR / "stacked_feature_maps.npz",
         **{name: value.cpu().numpy() for name, value in out.items()},
@@ -528,7 +617,8 @@ def train_classifier_and_visualize_features(
                 optimizer.step()
 
                 loss_sum += loss.item() * imgs.size(0)
-                correct += (out.argmax(dim=1) == targets).sum().item()
+                probs = predict_proba(out)
+                correct += (probs.argmax(dim=1) == targets).sum().item()
                 total += targets.size(0)
 
             tr_loss = loss_sum / total
@@ -542,7 +632,8 @@ def train_classifier_and_visualize_features(
                     imgs, targets = imgs.to(device), targets.to(device)
                     out = model(imgs)
                     v_loss_sum += criterion(out, targets).item() * imgs.size(0)
-                    v_correct += (out.argmax(dim=1) == targets).sum().item()
+                    probs = predict_proba(out)
+                    v_correct += (probs.argmax(dim=1) == targets).sum().item()
                     v_total += targets.size(0)
 
             v_loss = v_loss_sum / v_total

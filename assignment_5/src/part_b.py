@@ -47,6 +47,12 @@ RESULTS_DIR = ROOT / "results" / "partB"
 CUSTOM_RESULTS_DIR = RESULTS_DIR / "custom_cnn"
 MODELS_DIR = ROOT / "models"
 TRANSFORM = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+TRAIN_TRANSFORM = transforms.Compose([
+    #transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
+    #transforms.RandomHorizontalFlip(),
+    #transforms.ColorJitter(0.2, 0.2, 0.2),
+    transforms.ToTensor(),
+])
 
 
 def get_device() -> torch.device:
@@ -73,9 +79,14 @@ def initialize_weights(module: nn.Module) -> None:
 def load_caltech_dataloaders(batch_size: int = 16, data_dir: Path = CALTECH_DIR):
     """Load train, validation, and test datasets into PyTorch DataLoaders."""
     datasets_by_split = {
-        split: datasets.ImageFolder(str(data_dir / split), transform=TRANSFORM)
+        split: datasets.ImageFolder(
+            str(data_dir / split),
+            transform=TRAIN_TRANSFORM if split == "train" else TRANSFORM,
+        )
         for split in ("train", "val", "test")
     }
+    # Non-augmented copy of the training set, used only for reporting train accuracy / confusion matrix
+    train_eval_dataset = datasets.ImageFolder(str(data_dir / "train"), transform=TRANSFORM)
     mapping = datasets_by_split["train"].class_to_idx
     if any(dataset.class_to_idx != mapping for dataset in datasets_by_split.values()):
         raise ValueError("Class mapping differs between dataset splits")
@@ -90,6 +101,7 @@ def load_caltech_dataloaders(batch_size: int = 16, data_dir: Path = CALTECH_DIR)
         )
         for split in ("train", "val", "test")
     }
+    loaders["train_eval"] = DataLoader(train_eval_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     class_to_index = datasets_by_split["train"].class_to_idx
     index_to_class = {index: class_name for class_name, index in class_to_index.items()}
     return loaders, class_to_index, index_to_class
@@ -136,7 +148,7 @@ class HierarchicalCaltechCNN(nn.Module):
             nn.Flatten(),
             nn.Linear(feature_dim, 128),
             nn.ReLU(),
-            nn.Dropout(dropout),  # regularization: active only in model.train()
+            nn.Dropout(p=dropout),
             nn.Linear(128, num_classes),
         )
         initialize_weights(self)
@@ -174,6 +186,7 @@ def describe_architecture(model: HierarchicalCaltechCNN, device: torch.device) -
     rows.extend([
         ("Flatten", (flat,), 0),
         ("FC1 + ReLU", (fc1.out_features,), sum(p.numel() for p in fc1.parameters())),
+        (f"Dropout (p={model.dropout:g})", (fc1.out_features,), 0),
         ("FC2 logits", (fc2.out_features,), sum(p.numel() for p in fc2.parameters())),
     ])
     table = ["| Layer | Output shape | Parameters |", "|---|---:|---:|"]
@@ -308,7 +321,7 @@ def train_single_model(
     model.load_state_dict(best_state)
 
     # Evaluate final metrics on all three dataset splits
-    train_acc, train_loss_final, train_cm = evaluate_split_with_loss(model, loaders["train"], criterion, device)
+    train_acc, train_loss_final, train_cm = evaluate_split_with_loss(model, loaders["train_eval"], criterion, device)
     val_acc, val_loss_final, val_cm = evaluate_split_with_loss(model, loaders["val"], criterion, device)
     test_acc, test_loss_final, test_cm = evaluate_split_with_loss(model, loaders["test"], criterion, device)
 
@@ -336,6 +349,7 @@ def train_single_model(
         "train_cm": train_cm.cpu().numpy().tolist(),
         "val_acc": val_acc,
         "val_loss": val_loss_final,
+        "best_val_loss": best_val_loss,
         "val_cm": val_cm.cpu().numpy().tolist(),
         "test_acc": test_acc,
         "test_loss": test_loss_final,
@@ -421,7 +435,10 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
     ]
 
     # Best architecture selected by validation accuracy (per assignment Part B Q1b)
-    best_arch = max(arch_results, key=lambda a: (arch_results[a]["val_acc"], arch_results[a]["test_acc"]))
+    best_arch = max(
+        arch_results,
+        key=lambda a: (arch_results[a]["val_acc"], -arch_results[a]["val_loss"], -arch_results[a]["param_count"]),
+    )
     overall_best = arch_results[best_arch]
 
     summary_json = {
@@ -434,6 +451,8 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
             "train_accuracy": overall_best["train_acc"],
             "validation_accuracy": overall_best["val_acc"],
             "test_accuracy": overall_best["test_acc"],
+            "val_loss": overall_best["val_loss"],
+            "best_val_loss": overall_best["best_val_loss"],
             "best_epoch": overall_best["best_epoch"],
             "param_count": overall_best["param_count"],
         },
@@ -446,6 +465,8 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
                 "train_accuracy": exp["train_acc"],
                 "validation_accuracy": exp["val_acc"],
                 "test_accuracy": exp["test_acc"],
+                "val_loss": exp["val_loss"],
+                "best_val_loss": exp["best_val_loss"],
                 "train_cm": exp["train_cm"],
                 "val_cm": exp["val_cm"],
                 "test_cm": exp["test_cm"],
@@ -459,7 +480,7 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
     summary_json_path.write_text(json.dumps(summary_json, indent=2), encoding="utf-8")
     print(f"Saved custom CNN summary JSON to {summary_json_path}")
 
-    # Standard metrics schema for VGG19 comparison
+    # Standard metrics schema for comparison
     root_metrics = {
         "best_architecture": best_arch,
         "optimizer": "Adam",
@@ -468,8 +489,11 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
                 "train_acc": exp["train_acc"],
                 "train_cm": exp["train_cm"],
                 "val_acc": exp["val_acc"],
+                "val_loss": exp["val_loss"],
+                "best_val_loss": exp["best_val_loss"],
                 "val_cm": exp["val_cm"],
                 "test_acc": exp["test_acc"],
+                "test_loss": exp["test_loss"],
                 "test_cm": exp["test_cm"],
                 "best_epoch": exp["best_epoch"],
                 "total_epochs_run": exp["total_epochs_run"],
@@ -479,9 +503,6 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
         },
     }
     (target_dir / "architecture_comparison_metrics.json").write_text(
-        json.dumps(root_metrics, indent=2), encoding="utf-8"
-    )
-    (RESULTS_DIR / "architecture_comparison_metrics.json").write_text(
         json.dumps(root_metrics, indent=2), encoding="utf-8"
     )
 
@@ -597,60 +618,7 @@ def generate_consolidated_summary(arch_results: dict[str, dict], target_dir: Pat
     plt.close(fig)
     print(f"Saved custom CNN architecture summary visualization to {fig_summary_path}")
 
-    # Synchronize comparative test confusion matrix with VGG19 if vgg19_metrics.json exists
-    vgg19_metrics_path = RESULTS_DIR / "vgg19" / "vgg19_metrics.json"
-    if vgg19_metrics_path.exists():
-        vgg_metrics = json.loads(vgg19_metrics_path.read_text(encoding="utf-8"))
-        vgg_test = vgg_metrics.get("test", {})
-        comparison = {
-            "custom_cnn": {
-                "architecture": best_arch,
-                "optimizer": "Adam",
-                "test_accuracy": overall_best["test_acc"],
-                "test_confusion_matrix": overall_best["test_cm"],
-            },
-            "vgg19": {
-                "test_accuracy": vgg_test.get("accuracy", 0.0),
-                "test_confusion_matrix": vgg_test.get("confusion_matrix", []),
-            },
-        }
-        (RESULTS_DIR / "vgg19" / "custom_cnn_vs_vgg19_test_comparison.json").write_text(
-            json.dumps(comparison, indent=2), encoding="utf-8"
-        )
-        (RESULTS_DIR / "vgg19" / "q1_q2_test_comparison.json").write_text(
-            json.dumps(comparison, indent=2), encoding="utf-8"
-        )
 
-        class_names = ["butterfly", "car_side", "grand_piano", "scorpion", "starfish"]
-        num_classes = len(class_names)
-        fig_comp, axes = plt.subplots(1, 2, figsize=(11, 5))
-        for axis, title, matrix, value in (
-            (axes[0], f"Best Custom CNN: {best_arch.upper()} (Adam: {overall_best['test_acc'] * 100:.1f}%)",
-             np.asarray(overall_best["test_cm"]), overall_best["test_acc"]),
-            (axes[1], f"VGG19 Transfer Learning ({vgg_test.get('accuracy', 0.0) * 100:.1f}%)",
-             np.asarray(vgg_test.get("confusion_matrix", np.zeros((num_classes, num_classes)))), vgg_test.get("accuracy", 0.0)),
-        ):
-            axis.imshow(matrix, cmap="Blues")
-            axis.set_title(title, fontsize=10, fontweight="bold")
-            axis.set_xticks(range(len(class_names)), class_names, rotation=35, ha="right")
-            axis.set_yticks(range(len(class_names)), class_names)
-            axis.set_xlabel("Predicted")
-            axis.set_ylabel("True")
-            threshold = matrix.max() / 2 if matrix.max() else 1
-            for row in range(num_classes):
-                for column in range(num_classes):
-                    axis.text(
-                        column, row, str(int(matrix[row, column])),
-                        ha="center", va="center",
-                        color="white" if matrix[row, column] > threshold else "black",
-                        fontweight="bold",
-                    )
-        fig_comp.suptitle("Comparative Test Set Performance: Best Custom CNN (Adam) vs. Pretrained VGG19", fontsize=12, fontweight="bold")
-        fig_comp.tight_layout()
-        fig_comp.savefig(RESULTS_DIR / "vgg19" / "custom_cnn_vs_vgg19_test_comparison.png", dpi=180, bbox_inches="tight")
-        fig_comp.savefig(RESULTS_DIR / "vgg19" / "q1_q2_test_comparison.png", dpi=180, bbox_inches="tight")
-        plt.close(fig_comp)
-        print(f"Updated VGG19 comparative test figure at {RESULTS_DIR / 'vgg19' / 'custom_cnn_vs_vgg19_test_comparison.png'}")
 
 
 def main():
@@ -677,7 +645,7 @@ def main():
     images, _, _, _ = sample_representative_images(data_dir=CALTECH_DIR)
 
     print("\n" + "=" * 75)
-    print(f"RUNNING CALTECH-101 CUSTOM CNN PIPELINE (ADAM OPTIMIZER: lr={args.lr})")
+    print(f"RUNNING CALTECH-101 CUSTOM CNN PIPELINE (ADAM OPTIMIZER: lr={args.lr}, dropout={args.dropout})")
     print(f"Target Directory: {CUSTOM_RESULTS_DIR}")
     print("=" * 75)
 
@@ -703,17 +671,23 @@ def main():
             {
                 "architecture": architecture,
                 "optimizer": "Adam",
+                "dropout": args.dropout,
                 "model_state_dict": exp["model"].state_dict(),
                 "test_acc": exp["test_acc"],
                 "val_acc": exp["val_acc"],
+                "val_loss": exp["val_loss"],
+                "best_val_loss": exp["best_val_loss"],
             },
             MODELS_DIR / f"caltech_{architecture}.pth",
         )
 
-    # Determine best architecture based on validation accuracy (Q1b)
-    best_arch = max(arch_results, key=lambda a: (arch_results[a]["val_acc"], arch_results[a]["test_acc"]))
+    # Determine best architecture based on validation accuracy and validation loss
+    best_arch = max(
+        arch_results,
+        key=lambda a: (arch_results[a]["val_acc"], -arch_results[a]["val_loss"], -arch_results[a]["param_count"]),
+    )
     best_model = arch_results[best_arch]["model"]
-    print(f"\nBest architecture: {best_arch.upper()} (Val Acc: {arch_results[best_arch]['val_acc'] * 100:.1f}%, Test Acc: {arch_results[best_arch]['test_acc'] * 100:.1f}%)")
+    print(f"\nBest architecture: {best_arch.upper()} (Val Acc: {arch_results[best_arch]['val_acc'] * 100:.1f}%, Val Loss: {arch_results[best_arch]['val_loss']:.4f}, Test Acc: {arch_results[best_arch]['test_acc'] * 100:.1f}%)")
 
     # Feature maps of best architecture (Q1c)
     with torch.no_grad():
