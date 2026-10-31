@@ -1,0 +1,62 @@
+{
+  "butterfly": {
+    "channel": 5,
+    "row": 21,
+    "col": 4,
+    "activation": 2.9238665103912354,
+    "bbox": [
+      168,
+      32,
+      219,
+      83
+    ]
+  },
+  "car_side": {
+    "channel": 11,
+    "row": 13,
+    "col": 14,
+    "activation": 0.6995243430137634,
+    "bbox": [
+      104,
+      112,
+      155,
+      163
+    ]
+  },
+  "grand_piano": {
+    "channel": 3,
+    "row": 9,
+    "col": 16,
+    "activation": 1.5422399044036865,
+    "bbox": [
+      72,
+      128,
+      123,
+      179
+    ]
+  },
+  "scorpion": {
+    "channel": 5,
+    "row": 8,
+    "col": 15,
+    "activation": 1.065677285194397,
+    "bbox": [
+      64,
+      120,
+      115,
+      171
+    ]
+  },
+  "starfish": {
+    "channel": 3,
+    "row": 14,
+    "col": 8,
+    "activation": 0.5056045651435852,
+    "bbox": [
+      112,
+      64,
+      163,
+      115
+    ]
+  }
+}
