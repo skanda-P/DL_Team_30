@@ -48,9 +48,10 @@ CUSTOM_RESULTS_DIR = RESULTS_DIR / "custom_cnn"
 MODELS_DIR = ROOT / "models"
 TRANSFORM = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
 TRAIN_TRANSFORM = transforms.Compose([
-    #transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
-    #transforms.RandomHorizontalFlip(),
-    #transforms.ColorJitter(0.2, 0.2, 0.2),
+    transforms.Resize((224, 224)),
+    # transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),   # augmentation disabled in reported runs
+    # transforms.RandomHorizontalFlip(),
+    # transforms.ColorJitter(0.2, 0.2, 0.2),
     transforms.ToTensor(),
 ])
 
@@ -64,9 +65,11 @@ def get_device() -> torch.device:
 
 
 def initialize_weights(module: nn.Module) -> None:
-    """Initialize convolution weights with Kaiming normal and dense weights with Xavier uniform."""
+    """Initialize convolution weights with Kaiming normal (mode='fan_out', while Part A uses 'fan_in')
+    and dense weights with Xavier uniform."""
     for layer in module.modules():
         if isinstance(layer, nn.Conv2d):
+            # Note: Part B custom CNNs use mode='fan_out' per research protocol, unlike Part A which uses 'fan_in'
             nn.init.kaiming_normal_(layer.weight, mode="fan_out", nonlinearity="relu")
             if layer.bias is not None:
                 nn.init.zeros_(layer.bias)

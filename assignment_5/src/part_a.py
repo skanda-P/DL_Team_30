@@ -365,8 +365,9 @@ def single_filter_convolution_analysis(
     manual = torch.stack(
         [manual_conv2d(images[i, 0], kernel_cpu, bias_cpu) for i in range(len(images))]
     ).unsqueeze(1)
+    max_diff = (manual - feature_maps).abs().max().item()
     assert torch.allclose(manual, feature_maps, atol=1e-5), "manual conv != nn.Conv2d"
-    print("Manual sliding-window convolution matches nn.Conv2d")
+    print(f"Manual sliding-window convolution matches nn.Conv2d, max absolute difference: {max_diff:.4e}")
 
     # Save distinct figures for each class
     for i, cname in enumerate(class_names):
@@ -424,6 +425,7 @@ def single_filter_convolution_analysis(
         "filter_weights": filter_w.tolist(),
         "expected_spatial": [expected_h, expected_w],
         "obtained_spatial": [actual_h, actual_w],
+        "max_absolute_difference": max_diff,
     }
     (RESULTS_DIR / "single_filter_observations.json").write_text(json.dumps(records, indent=2))
     print(f"Saved atomic filter to {FILTERS_DIR / 'single_filter_kernel.png'}")

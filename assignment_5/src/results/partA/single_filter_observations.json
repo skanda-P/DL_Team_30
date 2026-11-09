@@ -63,5 +63,6 @@
   "obtained_spatial": [
     24,
     24
-  ]
+  ],
+  "max_absolute_difference": 3.427267074584961e-07
 }

@@ -21,3 +21,5 @@ __pycache__/
 
 # Results
 # Result files are intentionally tracked.
+**/results.zip
+

@@ -26,23 +26,26 @@ assignment_5/
     │   │   ├── receptive_field_patch_{class}.png (distinct per class with bounding boxes)
     │   │   └── mnist_training_curves.png & mnist_confusion_matrices.png
     │   └── partB/                   <- Figures and JSON metrics for Caltech-101
+    │       ├── dropout_study_grouped_bar_chart.png
+    │       ├── q1_q2_test_comparison.png & q1_q2_test_comparison.json
     │       ├── custom_cnn/          <- Custom CNN benchmarks with Adam optimizer (lr=0.001)
-    │       │   ├── arch{1,2,3}_architecture.md (layer table with output shapes and parameter counts)
-    │       │   ├── arch{1,2,3}_{train,val,test}_confusion_matrix.png (separate atomic images)
-    │       │   ├── arch{1,2,3}_training_curves.png (loss & validation accuracy curves)
-    │       │   ├── {best_arch}_feature_maps.png (first conv + remaining conv layers)
-    │       │   ├── custom_cnn_rf_patch_{class}.png (distinct 2-panel per class with bounding boxes)
-    │       │   ├── custom_cnn_patch_info.json
-    │       │   ├── custom_cnn_architectures_summary.png & custom_cnn_architectures_summary.json
-    │       │   └── architecture_comparison_metrics.json
-    │       ├── architecture_comparison_metrics.json (mirrored at root for VGG19 comparison)
-    │       └── vgg19/               <- VGG19 transfer learning, Guided Backprop, and Grad-CAM
-    │           ├── vgg19_{train,val,test}_confusion_matrix.png
-    │           ├── q1_q2_test_comparison.png & q1_q2_test_comparison.json
-    │           ├── vgg19_rf_patch_{class}.png (distinct per class)
-    │           ├── guided_backprop_neuron_{idx}_ch_{ch}.png (distinct 4-panel per neuron)
+    │       │   ├── dropout_study_summary.csv & overall_best.json
+    │       │   └── dropout{0,0.3,0.5}/
+    │       │       ├── arch{1,2,3}_architecture.md (layer table with output shapes and parameter counts)
+    │       │       ├── arch{1,2,3}_{train,val,test}_confusion_matrix.png (separate atomic images)
+    │       │       ├── arch{1,2,3}_training_curves.png (loss & validation accuracy curves)
+    │       │       ├── arch1_feature_maps.png (post-ReLU feature maps for butterfly)
+    │       │       ├── custom_cnn_rf_patch_{class}.png (distinct 2-panel per class with bounding boxes)
+    │       │       ├── custom_cnn_patch_info.json
+    │       │       └── architecture_comparison_metrics.json
+    │       └── vgg19/               <- TensorFlow Keras VGG-19 transfer learning, Guided Backprop, and Grad-CAM
+    │           ├── vgg19_{train,val,test}_confusion_matrix.png & vgg19_metrics.json
+    │           ├── vgg19_training_curves.png
+    │           ├── vgg19_rf_patch_{class}.png & vgg19_rf_patch_info.json
+    │           ├── guided_backprop_neuron_{1..5}_ch_{ch}.png (distinct 4-panel per neuron)
     │           ├── guided_backprop_ch{ch}_{overlay,saliency,rgb}.png (standalone images)
-    │           └── gradcam/         <- 25 individual Grad-CAM heatmaps and overlays (no grids)
+    │           ├── guided_backprop_neuron_info.json
+    │           └── gradcam/         <- 25 individual Grad-CAM heatmaps and overlays
     │               ├── {input}_explains_{target}.png (distinct 3-panel per pair)
     │               └── {input}_explains_{target}_overlay.png (standalone overlay)
     ├── utils/                       <- Utility modules

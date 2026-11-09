@@ -5,7 +5,7 @@
 **Tasks**:
 - **Part A**: Convolutional layers, feature hierarchies, receptive fields, and supervised CNN classification on MNIST subset.
 - **Part B**: Custom CNN architecture search (3 architectures evaluated with Adam optimizer) on Caltech-101 subset.
-- **Part B (VGG19 & Interpretability)**: VGG19 Transfer Learning, Receptive Field localization, Guided Backpropagation (RGB gradients, saliency maps, physical overlays), and Grad-CAM 5x5 pair explanations.
+- **Part B (VGG19 & Interpretability)**: VGG19 Transfer Learning via TensorFlow Keras (frozen ImageNet backbone, Dense(5) classification head, 20,485 trainable parameters, no batch norm), Receptive Field localization (252x252 clipped to 224x224), Guided Backpropagation (RGB gradients, saliency maps, physical overlays for top-5 butterfly neurons), and Grad-CAM 5x5 pair explanations.
 
 ---
 

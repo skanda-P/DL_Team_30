@@ -257,8 +257,18 @@ def run_explanations(model, raw, pre, class_names):
     first_activation = activations[0]
     channels = np.argsort(first_activation.max(axis=(0, 1)))[::-1][:5]
     raw0_norm = raw[0] / 255.0
+    guided_neuron_records = []
     for output_index, channel in enumerate(channels, start=1):
         row, col = np.unravel_index(np.argmax(first_activation[..., channel]), first_activation.shape[:2])
+        act_val = float(first_activation[row, col, channel])
+        guided_neuron_records.append({
+            "output_index": output_index,
+            "channel_0idx": int(channel),
+            "channel_1idx": int(channel + 1),
+            "row": int(row),
+            "col": int(col),
+            "activation": act_val,
+        })
         image = tf.convert_to_tensor(pre[0:1])
         with GuidedReluMode(conv_model):
             with tf.GradientTape() as tape:
@@ -290,6 +300,9 @@ def run_explanations(model, raw, pre, class_names):
 
     (RESULTS_DIR / "guided_backprop_info.json").write_text(
         json.dumps(guided_info, indent=2), encoding="utf-8"
+    )
+    (RESULTS_DIR / "guided_backprop_neuron_info.json").write_text(
+        json.dumps(guided_neuron_records, indent=2), encoding="utf-8"
     )
 
     # ========================================================================

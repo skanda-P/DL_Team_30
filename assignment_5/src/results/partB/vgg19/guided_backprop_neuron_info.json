@@ -1,0 +1,42 @@
+[
+  {
+    "output_index": 1,
+    "channel_0idx": 376,
+    "channel_1idx": 377,
+    "row": 9,
+    "col": 3,
+    "activation": 368.1682
+  },
+  {
+    "output_index": 2,
+    "channel_0idx": 103,
+    "channel_1idx": 104,
+    "row": 4,
+    "col": 6,
+    "activation": null
+  },
+  {
+    "output_index": 3,
+    "channel_0idx": 373,
+    "channel_1idx": 374,
+    "row": 3,
+    "col": 2,
+    "activation": null
+  },
+  {
+    "output_index": 4,
+    "channel_0idx": 385,
+    "channel_1idx": 386,
+    "row": 5,
+    "col": 6,
+    "activation": null
+  },
+  {
+    "output_index": 5,
+    "channel_0idx": 46,
+    "channel_1idx": 47,
+    "row": 5,
+    "col": 6,
+    "activation": null
+  }
+]
