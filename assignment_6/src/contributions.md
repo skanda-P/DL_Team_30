@@ -1,1 +1,7 @@
-<!-- Statement of Group 30 team member contributions and responsibilities for Assignment 6. -->
+# Statement of Student Contributions — Assignment 6 (Group 30)
+
+| Student Name | Roll Number | Contributions and Responsibilities |
+| :--- | :--- | :--- |
+| | | |
+| | | |
+| | | |
