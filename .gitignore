@@ -15,9 +15,11 @@ __pycache__/
 !models.py
 !**/models.py
 
-# Local datasets
+# Local datasets (exclude all except assignment_6)
 **/data/*
 !**/data/.gitkeep
+!assignment_6/**/data/**
+!assignment_6/data/**
 
 # Results
 # Result files are intentionally tracked.
