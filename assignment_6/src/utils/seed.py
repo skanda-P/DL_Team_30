@@ -1,4 +1,3 @@
-"""Deterministic random seed setup for Assignment 6."""
 from __future__ import annotations
 
 import os
@@ -9,7 +8,6 @@ import torch
 
 
 def set_seed(seed: int = 42, deterministic: bool = True) -> None:
-    """Fix RNG seeds across Python, NumPy, and PyTorch (CPU + CUDA)."""
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)

@@ -1,4 +1,4 @@
-# Assignment 6 Setup and Execution Guide (Group 30)
+# Assignment 6 Setup and Execution Guide
 
 ## 1. Environment Installation
 
@@ -11,39 +11,78 @@ pip install -r requirements.txt
 
 ### Dependencies
 - Python 3.10+
-- PyTorch >= 2.0 (uses CUDA automatically via `--device auto`, or falls back to CPU)
+- PyTorch >= 2.0 (uses CUDA automatically if available via `--device auto`, else falls back to CPU)
 - NumPy, Pandas, Matplotlib, scikit-learn
 
-## 2. Dataset Layout & Normalized Handwritten Images
+## 2. Project Architecture
 
-- **Dataset 1 (Handwritten Character Strokes — classes `a`, `chA`, `dA`, `lA`, `tA`):**
-  - `src/data/1_handwritten/<class>/train/*.txt` (345 training files) and `dev/*.txt` (100 test files).
-  - Each file's `(x, y)` coordinates are independently min-max normalized to `[0, 1]`.
-  - All 445 normalized stroke images are exported separately inside `src/data/1_handwritten/normalized_images/<class>/<split>/<sample_stem>.png`.
-- **Dataset 2 (Consonant-Vowel Speech MFCCs — classes `bhA`, `hai`, `ka`, `ne`, `tA`):**
-  - `src/data/2_CV/<class>/Train/*.mfcc` (2,460 training files) and `Test/*.mfcc` (614 test files), 39-D MFCC frames.
-  - Standardized strictly using training-split mean and standard deviation.
+The codebase is organized into two main pipeline scripts and focused modular helpers:
 
-## 3. Splits & Stopping Rule
-
-- Fixed stratified 80/20 train/val split (`--split_seed 1234`), persisted to `results/<dataset>/split.json`. Test (`dev`/`Test`) data is evaluated strictly at the end for reporting.
-- Fixed single training seed (`--seed 42`) with `CrossEntropyLoss` and convergence stopping when `|E_t - E_{t-1}| < 1e-4` (`max_epochs=1000` safety cap).
-
-## 4. Exact Reproduction Commands
-
-Execute from inside `assignment_6/src/`:
-
-```powershell
-# 1. Verify dataset discovery, padding invariance, and export all normalized handwritten images
-python data_loader.py --dataset handwritten --selftest --export_all_images
-python data_loader.py --dataset cv --selftest
-
-# 2. Run 2-stage hyperparameter sweep (15 configs per model, 1 run each, zero retraining)
-python run_experiments.py --dataset handwritten
-python run_experiments.py --dataset cv
-
-# 3. Generate all report plots, confusion matrices, normalized grids, and results/summary.md
-python generate_report_plots.py
+```text
+assignment_6/src/
+├── part_1.py            # Complete end-to-end pipeline for Part 1 (Handwritten Characters)
+├── part_2.py            # Complete end-to-end pipeline for Part 2 (CV Speech Segments)
+├── models.py            # Unified sequence classifier (SeqClassifier supporting RNN and LSTM)
+├── data_loader.py       # Dataset discovery, parsing, sequence collation, and normalization
+├── utils/
+│   ├── convergence.py   # Absolute error convergence checker (|E_t - E_{t-1}| < 1e-4)
+│   ├── metrics.py       # Evaluation, accuracy, loss, and confusion matrix calculation
+│   ├── plotting.py      # Plotting curves, sample grids, heatmaps, and summary markdown
+│   ├── io.py            # File I/O, JSON, CSV/Markdown table export, and logger setup
+│   └── seed.py          # Deterministic seeding helper
+├── data/                # Dataset storage (1_handwritten and 2_CV)
+├── models/              # Saved winning checkpoints (*_best.pt)
+└── results/             # Generated figures, tables, logs, and summary reports
 ```
 
-*(Single-configuration runs can also be launched via `python train.py --dataset handwritten --model lstm --hidden_size 64 --num_layers 2 --lr 1e-3`.)*
+## 3. Dataset Preprocessing & Visualizations
+
+- **Part 1 — Handwritten Character Dataset (`1_handwritten`, 5 classes: `a`, `chA`, `dA`, `lA`, `tA`):**
+  - Input coordinate sequences `(x, y)` are independently min-max normalized to `[0, 1]`.
+  - Individual stroke visualizations featuring ultra-thin connecting lines and small red vertex markers are exported to `data/1_handwritten/normalized_images/<class>/<split>/<sample>.png`.
+  - A 5x6 sample grid (`sample_grid.png`) is generated for qualitative visual assessment.
+- **Part 2 — Consonant-Vowel Segment Dataset (`2_CV`, 5 classes: `bhA`, `hai`, `ka`, `ne`, `tA`):**
+  - 39-dimensional acoustic MFCC frame sequences.
+  - Feature standardization (Z-score mean and std) is computed strictly on the training split and applied to validation/test sets.
+
+## 4. Experimental Protocol
+
+- **Split Ratio:** Stratified 70% train / 15% validation / 15% test.
+- **Stopping Rule:** Converged when average epoch change in training error satisfies $\frac{1}{B} \sum_{i=1}^B |E_t - E_{t-1}| < 10^{-4}$ with patience 5, or safety ceiling of 1000 epochs.
+- **2-Stage Hyperparameter Study (15 configs per model type, 30 per dataset):**
+  - **Stage 1 (9 configs):** Grid of hidden sizes `[32, 64, 128]` $\times$ layers `[1, 2, 3]`.
+  - **Stage 2 (6 configs):** Tuning around the Stage 1 winner:
+    - 2 alternate learning rates (`3e-3`, `3e-4`)
+    - RMSprop optimizer
+    - SGD optimizer with momentum 0.9 (`lr=1e-2`)
+    - Dropout (`0.2`)
+    - Bidirectional RNN / LSTM
+- **Zero Retraining:** The winning model state is captured directly in-memory and saved to `models/<dataset>_<model>_best.pt`.
+- **Total Models:** 30 models in Part 1 + 30 models in Part 2 = 60 total models.
+
+## 5. Execution Commands
+
+From `assignment_6/src/`:
+
+```powershell
+# Run the complete Part 1 pipeline (Handwritten Characters: data prep, RNN + LSTM sweeps, plots)
+python part_1.py
+
+# Run the complete Part 2 pipeline (CV Segments: data prep, RNN + LSTM sweeps, plots)
+python part_2.py
+```
+
+### Useful CLI Flags
+
+```powershell
+# Run only LSTM or only RNN
+python part_1.py --model lstm
+python part_2.py --model rnn
+
+# Fast smoke test / dry run (e.g., 5 epochs max)
+python part_1.py --max_epochs 5
+
+# Re-generate plots and summary tables without re-training
+python part_1.py --plots_only
+python part_2.py --plots_only
+```

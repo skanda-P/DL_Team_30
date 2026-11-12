@@ -1,4 +1,3 @@
-"""Classification evaluation, accuracy, confusion matrix, and per-class report helpers."""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Sequence
@@ -14,7 +13,6 @@ def compute_classification_metrics(
     y_pred: Sequence[int] | np.ndarray,
     class_names: Sequence[str],
 ) -> Dict[str, Any]:
-    """Compute accuracy, confusion matrix, normalized CM, and per-class report."""
     y_t = np.asarray(y_true, dtype=np.int64)
     y_p = np.asarray(y_pred, dtype=np.int64)
     labels = list(range(len(class_names)))
@@ -42,7 +40,6 @@ def evaluate_model(
     criterion: torch.nn.Module,
     device: torch.device,
 ) -> Dict[str, Any]:
-    """Run an evaluation pass over `loader`, returning loss, accuracy, and predictions."""
     model.eval()
     total_loss = 0.0
     total_samples = 0

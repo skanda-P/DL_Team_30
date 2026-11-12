@@ -1,4 +1,3 @@
-"""Dataset discovery, parsing, normalization, stratified train/val splitting, and DataLoader batching."""
 from __future__ import annotations
 
 import argparse
@@ -39,8 +38,6 @@ logger = setup_logger("data_loader")
 
 @dataclass(frozen=True)
 class SampleRecord:
-    """Metadata for a single sequential data sample."""
-
     path: Path
     rel_path: str
     class_name: str
@@ -49,7 +46,6 @@ class SampleRecord:
 
 
 def _resolve_dataset_dir(data_root: Path, dataset: Literal["handwritten", "cv"]) -> Path:
-    """Resolve the dataset subdirectory under `data_root`."""
     candidates = (
         [data_root / "1_handwritten", data_root / "handwritten", data_root]
         if dataset == "handwritten"
@@ -68,7 +64,6 @@ def _resolve_dataset_dir(data_root: Path, dataset: Literal["handwritten", "cv"])
 
 
 def _log_mapping_file(data_root: Path, dataset_dir: Path, dataset: str) -> None:
-    """Best-effort log of Mapping_Handwritten.txt / Mapping_CV.txt if present."""
     names = ["Mapping_Handwritten.txt"] if dataset == "handwritten" else ["Mapping_CV.txt"]
     for base in (dataset_dir, data_root, SRC_DIR):
         for name in names:
@@ -80,7 +75,6 @@ def _log_mapping_file(data_root: Path, dataset_dir: Path, dataset: str) -> None:
 
 
 def _is_valid_data_file(path: Path, dataset: Literal["handwritten", "cv"]) -> bool:
-    """Filter out hidden files, mapping files, and rendered images."""
     if not path.is_file() or path.name.startswith("."):
         return False
     if path.name.lower().startswith("mapping_"):
@@ -95,12 +89,6 @@ def discover_dataset(
     data_root: str | Path,
     dataset: Literal["handwritten", "cv"],
 ) -> Tuple[Path, List[str], List[SampleRecord], List[SampleRecord]]:
-    """Discover the 5 classes and train/test files under both supported folder nestings.
-
-    Supports:
-      - Layout A: `<dataset_dir>/<class>/(train|dev|test)/*`
-      - Layout B: `<dataset_dir>/(train|dev|test)/<class>/*`
-    """
     root = Path(data_root)
     dataset_dir = _resolve_dataset_dir(root, dataset)
     _log_mapping_file(root, dataset_dir, dataset)
@@ -120,7 +108,6 @@ def discover_dataset(
     raw_records: List[Tuple[Path, str, Literal["train", "test"]]] = []
 
     if top_lower & TRAIN_SPLIT_NAMES and top_lower & TEST_SPLIT_NAMES:
-        # Layout B: <split>/<class>/<files>
         for split_dir in top_dirs:
             sname = split_dir.name.lower()
             if sname in TRAIN_SPLIT_NAMES:
@@ -136,7 +123,6 @@ def discover_dataset(
                     if _is_valid_data_file(fpath, dataset):
                         raw_records.append((fpath, class_dir.name, canonical_split))
     else:
-        # Layout A: <class>/<split>/<files>
         for class_dir in top_dirs:
             for split_dir in sorted(class_dir.iterdir(), key=lambda p: p.name):
                 if not split_dir.is_dir() or split_dir.name.startswith("."):
@@ -179,7 +165,6 @@ def discover_dataset(
     train_records.sort(key=lambda r: r.rel_path)
     test_records.sort(key=lambda r: r.rel_path)
 
-    # Validate non-empty train and test per class and print discovery summary.
     logger.info("Discovery summary for dataset='%s' at '%s':", dataset, dataset_dir)
     for idx, cls_name in enumerate(class_names):
         n_tr = sum(1 for r in train_records if r.label == idx)
@@ -195,11 +180,6 @@ def discover_dataset(
 
 
 def parse_handwritten_file(path: Path) -> Tuple[np.ndarray, bool]:
-    """Parse a handwritten stroke file: first token N followed by N (x, y) pairs.
-
-    Returns:
-        (points of shape (T, 2) float32, malformed_flag).
-    """
     raw_text = path.read_text(encoding="utf-8", errors="replace").strip()
     tokens = [t for t in re.split(r"[\s,]+", raw_text) if t]
     if len(tokens) < 3:
@@ -215,14 +195,6 @@ def parse_handwritten_file(path: Path) -> Tuple[np.ndarray, bool]:
         if usable <= 0:
             usable = 2 * (len(coord_vals) // 2)
         coord_vals = coord_vals[:usable]
-        logger.warning(
-            "Malformed handwritten sample '%s': declared N=%d (expected %d values), found %d values; trimmed to %d.",
-            path,
-            n_declared,
-            2 * n_declared,
-            len(tokens) - 1,
-            usable,
-        )
 
     if len(coord_vals) < 2:
         raise ValueError(f"Handwritten sample '{path}' contains zero valid (x, y) pairs.")
@@ -232,7 +204,6 @@ def parse_handwritten_file(path: Path) -> Tuple[np.ndarray, bool]:
 
 
 def normalize_handwritten_xy(seq: np.ndarray) -> np.ndarray:
-    """Min-max normalize x and y coordinates independently per sample into [0, 1]."""
     out = seq.astype(np.float32, copy=True)
     for col in range(2):
         cmin = float(out[:, col].min())
@@ -246,7 +217,6 @@ def normalize_handwritten_xy(seq: np.ndarray) -> np.ndarray:
 
 
 def parse_cv_file(path: Path) -> Tuple[np.ndarray, bool]:
-    """Parse a CV MFCC file of shape (T, 39) tolerating whitespace/comma delimiters."""
     rows: List[List[float]] = []
     malformed = False
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -262,8 +232,6 @@ def parse_cv_file(path: Path) -> Tuple[np.ndarray, bool]:
                 vals = vals + [0.0] * (CV_FEATURE_DIM - len(vals))
         rows.append(vals)
 
-    if malformed:
-        logger.warning("Malformed CV sample '%s': encountered row(s) with != %d columns.", path, CV_FEATURE_DIM)
     if not rows:
         raise ValueError(f"CV sample '{path}' is empty.")
 
@@ -271,7 +239,6 @@ def parse_cv_file(path: Path) -> Tuple[np.ndarray, bool]:
 
 
 def compute_train_standardization(train_seqs: Sequence[np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
-    """Fit feature-wise mean and std strictly across training sequences."""
     stacked = np.concatenate(train_seqs, axis=0).astype(np.float64)
     mean = stacked.mean(axis=0).astype(np.float32)
     std = stacked.std(axis=0).astype(np.float32)
@@ -280,7 +247,6 @@ def compute_train_standardization(train_seqs: Sequence[np.ndarray]) -> Tuple[np.
 
 
 def apply_standardization(seqs: Sequence[np.ndarray], mean: np.ndarray, std: np.ndarray) -> List[np.ndarray]:
-    """Apply precomputed training-split standardization to a list of sequences."""
     return [((s - mean) / std).astype(np.float32) for s in seqs]
 
 
@@ -290,7 +256,6 @@ def load_or_create_split(
     val_ratio: float = DEFAULT_VAL_RATIO,
     split_seed: int = DEFAULT_SPLIT_SEED,
 ) -> Tuple[List[int], List[int]]:
-    """Create or reload a fixed stratified train/val split over training records only."""
     if split_path.is_file():
         saved = load_json(split_path)
         expected_rels = [r.rel_path for r in train_records]
@@ -300,7 +265,6 @@ def load_or_create_split(
             and saved.get("all_train_rel_paths") == expected_rels
         ):
             return list(saved["train_indices"]), list(saved["val_indices"])
-        logger.warning("Existing split file '%s' differs in seed/ratio/files; regenerating.", split_path)
 
     labels = np.array([r.label for r in train_records], dtype=np.int64)
     splitter = StratifiedShuffleSplit(n_splits=1, test_size=val_ratio, random_state=split_seed)
@@ -328,8 +292,6 @@ def load_or_create_split(
 
 
 class SequenceDataset(Dataset):
-    """PyTorch Dataset wrapping variable-length numpy sequences and integer labels."""
-
     def __init__(self, sequences: Sequence[np.ndarray], labels: Sequence[int]) -> None:
         if len(sequences) != len(labels):
             raise ValueError("sequences and labels must have equal length.")
@@ -344,7 +306,6 @@ class SequenceDataset(Dataset):
 
 
 def pad_collate_fn(batch: Sequence[Tuple[torch.Tensor, int]]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Zero-pad variable-length sequences in a batch to (B, T_max, D), returning (x, lengths, labels)."""
     seqs, labels = zip(*batch)
     lengths = torch.tensor([s.size(0) for s in seqs], dtype=torch.int64)
     feat_dim = seqs[0].size(1)
@@ -360,8 +321,6 @@ def pad_collate_fn(batch: Sequence[Tuple[torch.Tensor, int]]) -> Tuple[torch.Ten
 
 @dataclass
 class PreparedData:
-    """Container holding prepared train/val/test DataLoaders and dataset metadata."""
-
     dataset_name: Literal["handwritten", "cv"]
     dataset_dir: Path
     class_names: List[str]
@@ -374,12 +333,15 @@ class PreparedData:
     scaler_std: Optional[List[float]]
     malformed_count: int
 
+    @property
+    def num_classes(self) -> int:
+        return len(self.class_names)
+
 
 def _load_records(
     records: Sequence[SampleRecord],
     dataset: Literal["handwritten", "cv"],
 ) -> Tuple[List[np.ndarray], List[int], int]:
-    """Parse and normalize a list of sample records."""
     seqs: List[np.ndarray] = []
     labels: List[int] = []
     malformed_total = 0
@@ -407,7 +369,6 @@ def prepare_dataloaders(
     val_ratio: float = DEFAULT_VAL_RATIO,
     seed: int = 42,
 ) -> PreparedData:
-    """Discover, parse, split, normalize/standardize, and wrap datasets into DataLoaders."""
     dataset_dir, class_names, all_train_records, test_records = discover_dataset(data_root, dataset)
     split_path = Path(results_root) / dataset / "split.json"
     train_idx, val_idx = load_or_create_split(
@@ -485,7 +446,6 @@ def render_stroke_on_axis(
     invert_y: bool = INVERT_Y,
     title: Optional[str] = None,
 ) -> None:
-    """Draw normalized [0, 1] handwritten stroke polyline with hairline edges and red vertex markers."""
     x = norm_pts[:, 0]
     y = norm_pts[:, 1]
     ax.plot(x, y, color="#1f77b4", linewidth=0.5, zorder=2)
@@ -507,13 +467,6 @@ def export_all_handwritten_normalized_images(
     invert_y: bool = INVERT_Y,
     overwrite: bool = True,
 ) -> Path:
-    """Render and save the normalized image of EVERY handwritten sample inside `normalized_images/`.
-
-    Images are saved under:
-      `<dataset_dir>/normalized_images/<class_name>/<split>/<sample_stem>.png`
-    so the raw `.txt` directories remain untouched while all normalized representations are stored
-    separately within the handwritten dataset folder.
-    """
     dataset_dir, _, train_records, test_records = discover_dataset(data_root, "handwritten")
     out_root = dataset_dir / NORMALIZED_IMAGES_DIRNAME
     all_records = list(train_records) + list(test_records)
@@ -549,7 +502,6 @@ def export_all_handwritten_normalized_images(
 
 
 def run_selftest(dataset: Literal["handwritten", "cv"], data_root: str | Path = DATA_ROOT) -> None:
-    """Verify padding invariance and normalization bounds."""
     set_seed(42)
     prep = prepare_dataloaders(dataset=dataset, data_root=data_root, batch_size=8, seed=42)
 

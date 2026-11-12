@@ -1,7 +1,6 @@
-"""Configurable RNN and LSTM sequence classifiers with packed padding support."""
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 import torch.nn as nn
@@ -9,26 +8,20 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 
 class SeqClassifier(nn.Module):
-    """Sequence classifier with vanilla RNN (tanh) or LSTM backbone.
-
-    Inputs:
-        x: (B, T_max, input_size) zero-padded sequence tensor.
-        lengths: (B,) valid sequence lengths (>= 1).
-    Output:
-        logits: (B, num_classes).
-    """
-
     def __init__(
         self,
-        rnn_type: Literal["rnn", "lstm"],
-        input_size: int,
-        hidden_size: int,
+        rnn_type: Literal["rnn", "lstm"] = "rnn",
+        input_size: int = 2,
+        hidden_size: int = 64,
         num_layers: int = 1,
         bidirectional: bool = False,
         dropout: float = 0.0,
         num_classes: int = 5,
+        model_type: Optional[str] = None,
     ) -> None:
         super().__init__()
+        if model_type is not None:
+            rnn_type = model_type
         if rnn_type not in ("rnn", "lstm"):
             raise ValueError(f"Unsupported rnn_type '{rnn_type}'; expected 'rnn' or 'lstm'.")
         if num_layers < 1:
@@ -41,7 +34,7 @@ class SeqClassifier(nn.Module):
         self.num_directions = 2 if self.bidirectional else 1
 
         rnn_dropout = float(dropout) if self.num_layers > 1 else 0.0
-        common_kwargs = dict(
+        kwargs = dict(
             input_size=int(input_size),
             hidden_size=self.hidden_size,
             num_layers=self.num_layers,
@@ -50,16 +43,14 @@ class SeqClassifier(nn.Module):
             bidirectional=self.bidirectional,
         )
         if self.rnn_type == "rnn":
-            self.rnn = nn.RNN(nonlinearity="tanh", **common_kwargs)
+            self.rnn = nn.RNN(nonlinearity="tanh", **kwargs)
         else:
-            self.rnn = nn.LSTM(**common_kwargs)
+            self.rnn = nn.LSTM(**kwargs)
 
-        # Apply dropout on the final representation when num_layers == 1.
         self.out_dropout = nn.Dropout(float(dropout)) if (self.num_layers == 1 and float(dropout) > 0.0) else nn.Identity()
         self.classifier = nn.Linear(self.hidden_size * self.num_directions, int(num_classes))
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        """Encode variable-length sequences using packed sequences so padding never leaks."""
         packed = pack_padded_sequence(
             x, lengths.detach().to(device="cpu", dtype=torch.int64), batch_first=True, enforce_sorted=False
         )
@@ -75,5 +66,4 @@ class SeqClassifier(nn.Module):
         return self.classifier(self.out_dropout(feat))
 
     def count_parameters(self) -> int:
-        """Return total number of trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)

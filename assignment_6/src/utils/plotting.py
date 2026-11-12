@@ -1,9 +1,7 @@
-"""Generate Assignment 6 figures, normalized handwritten plots, and results/summary.md."""
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib
 
@@ -13,8 +11,6 @@ import numpy as np
 import pandas as pd
 
 from data_loader import (
-    DATA_ROOT,
-    RESULTS_ROOT,
     discover_dataset,
     export_all_handwritten_normalized_images,
     normalize_handwritten_xy,
@@ -22,13 +18,12 @@ from data_loader import (
     parse_handwritten_file,
     render_stroke_on_axis,
 )
-from utils.io import load_json, save_csv_and_md, setup_logger
+from utils.io import load_json, save_csv_and_md
 
 INVERT_Y = False
-logger = setup_logger("generate_report_plots")
 
 
-def _load_curve(run_dir: str) -> Tuple[np.ndarray, np.ndarray, str]:
+def load_curve(run_dir: str) -> Tuple[np.ndarray, np.ndarray, str]:
     p = Path(run_dir)
     m_path, h_path = p / "metrics.json", p / "history.json"
     if not (m_path.is_file() and h_path.is_file()):
@@ -42,7 +37,7 @@ def _load_curve(run_dir: str) -> Tuple[np.ndarray, np.ndarray, str]:
     return np.array(ep, dtype=np.int64), np.array(err, dtype=np.float64), met.get("stop_reason", "unknown")
 
 
-def _plot_confusion_matrix(
+def plot_confusion_matrix(
     cm: np.ndarray,
     class_names: List[str],
     title: str,
@@ -91,8 +86,8 @@ def _plot_confusion_matrix(
     plt.close(fig)
 
 
-def _plot_single_error_curve(run_dir: str, title: str, out_path: Path) -> None:
-    ep, err, reason = _load_curve(run_dir)
+def plot_single_error_curve(run_dir: str, title: str, out_path: Path) -> None:
+    ep, err, reason = load_curve(run_dir)
     if len(ep) == 0:
         return
 
@@ -120,7 +115,7 @@ def _plot_single_error_curve(run_dir: str, title: str, out_path: Path) -> None:
     plt.close(fig)
 
 
-def _plot_stage1_overview(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
+def plot_stage1_overview(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
     s1 = [s for s in summaries if s["stage"] == "stage1_arch"]
     if not s1:
         return
@@ -134,7 +129,7 @@ def _plot_stage1_overview(summaries: List[Dict[str, Any]], title: str, out_path:
 
     for ax, nl in zip(axes, layers):
         for s in sorted([x for x in s1 if x["num_layers"] == nl], key=lambda x: x["hidden_size"]):
-            ep, err, reason = _load_curve(s["run_dir"])
+            ep, err, reason = load_curve(s["run_dir"])
             if len(ep) == 0:
                 continue
             lbl = f"hidden={s['hidden_size']}" + ("*" if reason != "converged" else "")
@@ -154,7 +149,7 @@ def _plot_stage1_overview(summaries: List[Dict[str, Any]], title: str, out_path:
     plt.close(fig)
 
 
-def _plot_stage2_overview(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
+def plot_stage2_overview(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
     s2 = [s for s in summaries if s["stage"] == "stage2_opt"]
     if not s2:
         return
@@ -163,13 +158,13 @@ def _plot_stage2_overview(summaries: List[Dict[str, Any]], title: str, out_path:
 
     fig, ax = plt.subplots(figsize=(7.8, 4.6), dpi=220)
     if ref is not None:
-        ep_r, err_r, _ = _load_curve(ref["run_dir"])
+        ep_r, err_r, _ = load_curve(ref["run_dir"])
         if len(ep_r) > 0:
             ax.plot(ep_r, err_r, color="black", linestyle="--", linewidth=2.0, label="Stage 1 Best (Ref)")
 
     colors = plt.cm.tab10(np.linspace(0, 1, max(len(s2), 1)))
     for i, s in enumerate(s2):
-        ep, err, reason = _load_curve(s["run_dir"])
+        ep, err, reason = load_curve(s["run_dir"])
         if len(ep) == 0:
             continue
         lbl = f"{s['optimizer']} lr={s['lr']}"
@@ -192,7 +187,7 @@ def _plot_stage2_overview(summaries: List[Dict[str, Any]], title: str, out_path:
     plt.close(fig)
 
 
-def _plot_stage1_heatmap(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
+def plot_stage1_heatmap(summaries: List[Dict[str, Any]], title: str, out_path: Path) -> None:
     s1 = [s for s in summaries if s["stage"] == "stage1_arch"]
     if not s1:
         return
@@ -246,7 +241,6 @@ def generate_handwritten_sample_grids(
     invert_y: bool = INVERT_Y,
     samples_per_class: int = 6,
 ) -> None:
-    """Save 5x6 normalized stroke grid and per-class strips."""
     _, class_names, train_records, _ = discover_dataset(data_root, "handwritten")
     out_dir = results_root / "handwritten"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -409,16 +403,23 @@ def generate_dataset_comparisons(results_root: Path, dataset: str) -> Dict[str, 
     return digest
 
 
-def _write_summary_markdown(results_root: Path, digests: Dict[str, Dict[str, Any]]) -> None:
+def update_summary_markdown(results_root: Path, digests: Optional[Dict[str, Dict[str, Any]]] = None) -> None:
+    digests = dict(digests or {})
     lines = ["# Assignment 6 Results Summary\n"]
     for ds_name in ("handwritten", "cv"):
-        if ds_name not in digests:
+        dg = digests.get(ds_name)
+        if dg is None:
+            rnn_p = results_root / ds_name / "rnn" / "best_model_details.json"
+            lstm_p = results_root / ds_name / "lstm" / "best_model_details.json"
+            if rnn_p.is_file() or lstm_p.is_file():
+                dg = generate_dataset_comparisons(results_root=results_root, dataset=ds_name)
+                digests[ds_name] = dg
+        if not dg:
             continue
-        dg = digests[ds_name]
         lines.append(f"## Dataset: `{ds_name}`\n")
         if "mean_stage1_lstm_minus_rnn_val" in dg:
             lines.append(
-                f"- **Stage 1 Paired Comparison (LSTM - RNN across {dg['n_stage1_paired']} architectures):** "
+                f"- **Stage 1 Paired Comparison (LSTM - RNN across {dg.get('n_stage1_paired', 0)} architectures):** "
                 f"Val delta = `{dg['mean_stage1_lstm_minus_rnn_val']*100:+.2f}%`, "
                 f"Test delta = `{dg['mean_stage1_lstm_minus_rnn_test']*100:+.2f}%`"
             )
@@ -439,8 +440,8 @@ def _write_summary_markdown(results_root: Path, digests: Dict[str, Dict[str, Any
                 )
             if all_p.is_file():
                 all_cfgs = load_json(all_p)
-                non_conv = sum(1 for c in all_cfgs if not c["converged"])
-                div_cnt = sum(1 for c in all_cfgs if c.get("diverged"))
+                non_conv = sum(1 for c in all_cfgs if not c.get("converged", False))
+                div_cnt = sum(1 for c in all_cfgs if c.get("diverged", False))
                 lines.append(
                     f"  - `{m_type.upper()}` sweep: `{len(all_cfgs)}` configs, `{non_conv}` non-converged, `{div_cnt}` diverged."
                 )
@@ -448,77 +449,56 @@ def _write_summary_markdown(results_root: Path, digests: Dict[str, Dict[str, Any
     (results_root / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def generate_all_plots(
-    data_root: Path = DATA_ROOT,
-    results_root: Path = RESULTS_ROOT,
-    invert_y: bool = INVERT_Y,
-) -> None:
-    if (data_root / "1_handwritten").is_dir() or (data_root / "handwritten").is_dir():
-        export_all_handwritten_normalized_images(data_root=data_root, invert_y=invert_y, overwrite=True)
-        generate_handwritten_sample_grids(data_root=data_root, results_root=results_root, invert_y=invert_y)
+def generate_all_plots_for_dataset(data_root: Path, results_root: Path, dataset: str) -> Dict[str, Any]:
+    if dataset == "handwritten":
+        export_all_handwritten_normalized_images(data_root=data_root, invert_y=INVERT_Y, overwrite=False)
+        generate_handwritten_sample_grids(data_root=data_root, results_root=results_root, invert_y=INVERT_Y)
 
-    digests: Dict[str, Dict[str, Any]] = {}
-    for dataset in ("handwritten", "cv"):
-        try:
-            generate_dataset_distribution_plot(data_root=data_root, results_root=results_root, dataset=dataset)
-        except FileNotFoundError:
-            continue
+    try:
+        generate_dataset_distribution_plot(data_root=data_root, results_root=results_root, dataset=dataset)
+    except Exception:
+        pass
 
-        for m_type in ("rnn", "lstm"):
-            model_dir = results_root / dataset / m_type
-            all_p = model_dir / "all_configs.json"
-            if all_p.is_file():
-                summaries = load_json(all_p)
-                for idx, s in enumerate(summaries):
-                    _plot_single_error_curve(
-                        s["run_dir"],
-                        title=f"{dataset}/{m_type}: {s['run_id']}",
-                        out_path=model_dir / "error_curves" / f"{idx + 1:02d}_{s['stage']}_{s['run_id']}.png",
-                    )
-                _plot_stage1_overview(summaries, f"{dataset} / {m_type.upper()}: Stage 1 Training Error", model_dir / "stage1_error_curves.png")
-                _plot_stage2_overview(summaries, f"{dataset} / {m_type.upper()}: Stage 2 Tuning Error", model_dir / "stage2_error_curves.png")
-                _plot_stage1_heatmap(summaries, f"{dataset} / {m_type.upper()}: Stage 1 Val Accuracy Heatmap", model_dir / "stage1_heatmap.png")
+    for m_type in ("rnn", "lstm"):
+        model_dir = results_root / dataset / m_type
+        all_p = model_dir / "all_configs.json"
+        if all_p.is_file():
+            summaries = load_json(all_p)
+            for idx, s in enumerate(summaries):
+                plot_single_error_curve(
+                    s["run_dir"],
+                    title=f"{dataset}/{m_type}: {s['run_id']}",
+                    out_path=model_dir / "error_curves" / f"{idx + 1:02d}_{s['stage']}_{s['run_id']}.png",
+                )
+            plot_stage1_overview(summaries, f"{dataset} / {m_type.upper()}: Stage 1 Training Error", model_dir / "stage1_error_curves.png")
+            plot_stage2_overview(summaries, f"{dataset} / {m_type.upper()}: Stage 2 Tuning Error", model_dir / "stage2_error_curves.png")
+            plot_stage1_heatmap(summaries, f"{dataset} / {m_type.upper()}: Stage 1 Val Accuracy Heatmap", model_dir / "stage1_heatmap.png")
 
-            best_p = model_dir / "best_model_details.json"
-            if best_p.is_file():
-                details = load_json(best_p)
-                cls_names = details["class_names"]
-                if details.get("test_cm"):
-                    _plot_confusion_matrix(
-                        np.asarray(details["test_cm"]),
-                        cls_names,
-                        title=f"{dataset} / {m_type.upper()} Test CM (Acc={details['test_acc']*100:.2f}%)",
-                        save_path=model_dir / "cm_best_test_counts.png",
-                    )
-                    _plot_confusion_matrix(
-                        np.asarray(details["test_cm"]),
-                        cls_names,
-                        title=f"{dataset} / {m_type.upper()} Normalized Test CM",
-                        save_path=model_dir / "cm_best_test_normalized.png",
-                        normalized=True,
-                    )
-                if details.get("train_cm"):
-                    _plot_confusion_matrix(
-                        np.asarray(details["train_cm"]),
-                        cls_names,
-                        title=f"{dataset} / {m_type.upper()} Train CM (Acc={details['train_acc']*100:.2f}%)",
-                        save_path=model_dir / "cm_best_train_counts.png",
-                    )
+        best_p = model_dir / "best_model_details.json"
+        if best_p.is_file():
+            details = load_json(best_p)
+            cls_names = details["class_names"]
+            if details.get("test_cm"):
+                plot_confusion_matrix(
+                    np.asarray(details["test_cm"]),
+                    cls_names,
+                    title=f"{dataset} / {m_type.upper()} Test CM (Acc={details['test_acc']*100:.2f}%)",
+                    save_path=model_dir / "cm_best_test_counts.png",
+                )
+                plot_confusion_matrix(
+                    np.asarray(details["test_cm"]),
+                    cls_names,
+                    title=f"{dataset} / {m_type.upper()} Normalized Test CM",
+                    save_path=model_dir / "cm_best_test_normalized.png",
+                    normalized=True,
+                )
+            if details.get("train_cm"):
+                plot_confusion_matrix(
+                    np.asarray(details["train_cm"]),
+                    cls_names,
+                    title=f"{dataset} / {m_type.upper()} Train CM (Acc={details['train_acc']*100:.2f}%)",
+                    save_path=model_dir / "cm_best_train_counts.png",
+                )
 
-        digests[dataset] = generate_dataset_comparisons(results_root=results_root, dataset=dataset)
-
-    _write_summary_markdown(results_root=results_root, digests=digests)
-    logger.info("Generated all figures and summary.md under '%s'.", results_root)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate Assignment 6 report plots and summaries.")
-    parser.add_argument("--data_root", type=str, default=str(DATA_ROOT))
-    parser.add_argument("--results_root", type=str, default=str(RESULTS_ROOT))
-    parser.add_argument("--invert_y", action="store_true", default=INVERT_Y)
-    args = parser.parse_args()
-    generate_all_plots(Path(args.data_root), Path(args.results_root), invert_y=args.invert_y)
-
-
-if __name__ == "__main__":
-    main()
+    digest = generate_dataset_comparisons(results_root=results_root, dataset=dataset)
+    return digest

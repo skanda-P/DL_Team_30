@@ -1,5 +1,3 @@
-"""Shared Assignment 6 utilities."""
-
 from utils.convergence import ConvergenceChecker
 from utils.io import compute_run_id, load_json, save_csv_and_md, save_json, setup_logger
 from utils.metrics import compute_classification_metrics, evaluate_model

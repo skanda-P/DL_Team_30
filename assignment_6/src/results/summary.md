@@ -1,8 +1,5 @@
-# Assignment 6 Experimental Results Digest (Auto-Generated)
+# Assignment 6 Results Summary
 
 ## Dataset: `handwritten`
-
-
-## Dataset: `cv`
 
 

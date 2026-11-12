@@ -1,4 +1,3 @@
-"""Successive-epoch training error convergence checker (|E_t - E_{t-1}| < 1e-4)."""
 from __future__ import annotations
 
 import math
@@ -6,8 +5,6 @@ from typing import Optional, Tuple
 
 
 class ConvergenceChecker:
-    """Stop training when |E_t - E_{t-1}| < tol (capped at max_epochs)."""
-
     def __init__(self, tol: float = 1e-4, min_epochs: int = 2, max_epochs: int = 1000) -> None:
         if tol <= 0:
             raise ValueError(f"tol must be positive, got {tol}")
@@ -24,7 +21,6 @@ class ConvergenceChecker:
         self.stop_reason: Optional[str] = None
 
     def step(self, epoch: int, train_error: float) -> Tuple[bool, Optional[str]]:
-        """Check stopping condition at 1-based epoch `epoch`."""
         if not math.isfinite(train_error):
             self.converged = False
             self.stop_reason = "diverged"
