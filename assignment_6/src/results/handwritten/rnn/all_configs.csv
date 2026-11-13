@@ -1,0 +1,16 @@
+stage,hidden_size,num_layers,bidirectional,dropout,optimizer,lr,batch_size,n_params,epochs,converged,diverged,stop_reason,train_error,train_acc,val_loss,val_acc,test_acc
+stage1_arch,32,1,False,0.0,adam,0.001,32,1317,27,True,False,converged,1.124649,0.449275,1.121494,0.391304,0.43
+stage1_arch,64,1,False,0.0,adam,0.001,32,4677,690,True,False,converged,0.103742,0.974638,0.467437,0.884058,0.94
+stage1_arch,128,1,False,0.0,adam,0.001,32,17541,985,True,False,converged,0.411444,0.876812,0.647909,0.768116,0.95
+stage1_arch,32,2,False,0.0,adam,0.001,32,3429,1000,False,False,max_epochs_cap,0.211169,0.934783,0.577233,0.884058,0.92
+stage1_arch,64,2,False,0.0,adam,0.001,32,12997,1000,False,False,max_epochs_cap,0.264917,0.938406,0.814574,0.811594,0.94
+stage1_arch,128,2,False,0.0,adam,0.001,32,50565,1000,False,False,max_epochs_cap,0.383514,0.876812,0.678803,0.768116,0.92
+stage1_arch,32,3,False,0.0,adam,0.001,32,5541,36,True,False,converged,1.072093,0.481884,1.15542,0.434783,0.4
+stage1_arch,64,3,False,0.0,adam,0.001,32,21317,276,True,False,converged,0.632877,0.76087,0.910014,0.681159,0.68
+stage1_arch,128,3,False,0.0,adam,0.001,32,83589,602,True,False,converged,0.000683,1.0,2.410689,0.594203,0.64
+stage2_opt,64,1,False,0.0,adam,0.003,32,4677,916,True,False,converged,0.544547,0.793478,0.905061,0.565217,0.61
+stage2_opt,64,1,False,0.0,adam,0.0003,32,4677,54,True,False,converged,1.119644,0.467391,1.116771,0.434783,0.44
+stage2_opt,64,1,False,0.0,rmsprop,0.001,32,4677,851,True,False,converged,0.08092,0.974638,0.341733,0.913043,0.96
+stage2_opt,64,1,False,0.0,sgd,0.01,32,4677,797,True,False,converged,0.545602,0.782609,1.055693,0.57971,0.78
+stage2_opt,64,1,False,0.2,adam,0.001,32,4677,213,True,False,converged,0.594628,0.706522,0.71685,0.623188,0.65
+stage2_opt,64,1,True,0.0,adam,0.001,32,9349,364,True,False,converged,0.001954,1.0,0.232409,0.942029,0.99

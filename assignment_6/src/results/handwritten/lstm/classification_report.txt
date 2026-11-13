@@ -1,0 +1,17 @@
+Dataset: handwritten | Model: lstm
+Best Config (selected by val_acc): {'dataset': 'handwritten', 'model': 'lstm', 'hidden_size': 32, 'num_layers': 1, 'bidirectional': False, 'dropout': 0.0, 'optimizer': 'adam', 'lr': 0.001, 'batch_size': 32, 'grad_clip': 1.0, 'tol': 0.0001, 'max_epochs': 1000, 'seed': 42, 'split_seed': 1234, 'stage': 'stage1_arch'}
+Train Acc: 98.91% | Val Acc: 98.55% | Test Acc: 97.00%
+Epochs: 484 (converged)
+
+Per-Class Test Classification Report:
+              precision    recall  f1-score   support
+
+           a     1.0000    1.0000    1.0000        20
+         chA     1.0000    0.9000    0.9474        20
+          dA     0.9524    1.0000    0.9756        20
+          lA     0.9091    1.0000    0.9524        20
+          tA     1.0000    0.9500    0.9744        20
+
+    accuracy                         0.9700       100
+   macro avg     0.9723    0.9700    0.9699       100
+weighted avg     0.9723    0.9700    0.9699       100

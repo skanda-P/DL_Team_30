@@ -1,0 +1,17 @@
+| stage | hidden_size | num_layers | bidirectional | dropout | optimizer | lr | batch_size | n_params | epochs | converged | diverged | stop_reason | train_error | train_acc | val_loss | val_acc | test_acc |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| stage1_arch | 32 | 1 | False | 0.0000 | adam | 0.0010 | 32 | 9509 | 31 | True | False | converged | 0.0315 | 0.9919 | 0.3302 | 0.9248 | 0.9267 |
+| stage1_arch | 64 | 1 | False | 0.0000 | adam | 0.0010 | 32 | 27205 | 49 | True | False | converged | 0.0009 | 1.0000 | 0.5726 | 0.9085 | 0.9300 |
+| stage1_arch | 128 | 1 | False | 0.0000 | adam | 0.0010 | 32 | 87173 | 30 | True | False | converged | 0.0006 | 1.0000 | 0.3562 | 0.9390 | 0.9381 |
+| stage1_arch | 32 | 2 | False | 0.0000 | adam | 0.0010 | 32 | 17957 | 61 | True | False | converged | 0.0012 | 1.0000 | 0.4677 | 0.9228 | 0.9283 |
+| stage1_arch | 64 | 2 | False | 0.0000 | adam | 0.0010 | 32 | 60485 | 11 | True | False | converged | 0.0844 | 0.9797 | 0.2464 | 0.9370 | 0.9349 |
+| stage1_arch | 128 | 2 | False | 0.0000 | adam | 0.0010 | 32 | 219269 | 41 | True | False | converged | 0.0003 | 1.0000 | 0.2983 | 0.9573 | 0.9397 |
+| stage1_arch | 32 | 3 | False | 0.0000 | adam | 0.0010 | 32 | 26405 | 59 | True | False | converged | 0.0110 | 0.9985 | 0.3680 | 0.9370 | 0.9104 |
+| stage1_arch | 64 | 3 | False | 0.0000 | adam | 0.0010 | 32 | 93765 | 64 | True | False | converged | 0.0004 | 1.0000 | 0.3281 | 0.9492 | 0.9528 |
+| stage1_arch | 128 | 3 | False | 0.0000 | adam | 0.0010 | 32 | 351365 | 53 | True | False | converged | 0.0002 | 1.0000 | 0.4347 | 0.9411 | 0.9544 |
+| stage2_opt | 128 | 2 | False | 0.0000 | adam | 0.0030 | 32 | 219269 | 38 | True | False | converged | 0.0002 | 1.0000 | 0.4379 | 0.9329 | 0.9560 |
+| stage2_opt | 128 | 2 | False | 0.0000 | adam | 0.0003 | 32 | 219269 | 70 | True | False | converged | 0.0003 | 1.0000 | 0.3879 | 0.9451 | 0.9446 |
+| stage2_opt | 128 | 2 | False | 0.0000 | rmsprop | 0.0010 | 32 | 219269 | 48 | True | False | converged | 0.0001 | 1.0000 | 0.2961 | 0.9634 | 0.9577 |
+| stage2_opt | 128 | 2 | False | 0.0000 | sgd | 0.0100 | 32 | 219269 | 46 | True | False | converged | 0.0174 | 0.9964 | 0.3179 | 0.9329 | 0.9316 |
+| stage2_opt | 128 | 2 | False | 0.2000 | adam | 0.0010 | 32 | 219269 | 30 | True | False | converged | 0.0016 | 0.9995 | 0.4511 | 0.9329 | 0.9332 |
+| stage2_opt | 128 | 2 | True | 0.0000 | adam | 0.0010 | 32 | 569605 | 29 | True | False | converged | 0.0003 | 1.0000 | 0.2748 | 0.9512 | 0.9544 |

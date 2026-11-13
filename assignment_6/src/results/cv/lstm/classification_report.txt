@@ -1,0 +1,17 @@
+Dataset: cv | Model: lstm
+Best Config (selected by val_acc): {'dataset': 'cv', 'model': 'lstm', 'hidden_size': 128, 'num_layers': 2, 'bidirectional': False, 'dropout': 0.0, 'optimizer': 'rmsprop', 'lr': 0.001, 'batch_size': 32, 'grad_clip': 1.0, 'tol': 0.0001, 'max_epochs': 1000, 'seed': 42, 'split_seed': 1234, 'stage': 'stage2_opt'}
+Train Acc: 100.00% | Val Acc: 96.34% | Test Acc: 95.77%
+Epochs: 48 (converged)
+
+Per-Class Test Classification Report:
+              precision    recall  f1-score   support
+
+         bhA     0.9038    1.0000    0.9495        47
+         hai     0.9760    0.9683    0.9721       126
+          ka     0.9451    0.8958    0.9198        96
+          ne     0.9834    0.9753    0.9793       243
+          tA     0.9143    0.9412    0.9275       102
+
+    accuracy                         0.9577       614
+   macro avg     0.9445    0.9561    0.9497       614
+weighted avg     0.9583    0.9577    0.9577       614

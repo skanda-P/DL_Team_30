@@ -1,0 +1,154 @@
+{
+  "run_id": "h128_l2_uni_do0.2_adam_lr0.001_bs32",
+  "run_dir": "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_6\\src\\results\\cv\\rnn\\stage2_opt\\h128_l2_uni_do0.2_adam_lr0.001_bs32",
+  "stage": "stage2_opt",
+  "config": {
+    "dataset": "cv",
+    "model": "rnn",
+    "hidden_size": 128,
+    "num_layers": 2,
+    "bidirectional": false,
+    "dropout": 0.2,
+    "optimizer": "adam",
+    "lr": 0.001,
+    "batch_size": 32,
+    "grad_clip": 1.0,
+    "tol": 0.0001,
+    "max_epochs": 1000,
+    "seed": 42,
+    "split_seed": 1234,
+    "stage": "stage2_opt"
+  },
+  "class_names": [
+    "bhA",
+    "hai",
+    "ka",
+    "ne",
+    "tA"
+  ],
+  "param_count": 55301,
+  "epochs": 96,
+  "converged": true,
+  "diverged": false,
+  "stop_reason": "converged",
+  "train_error": 0.013311007571202226,
+  "train_acc": 0.9969512195121951,
+  "val_loss": 0.48567697405815125,
+  "val_acc": 0.9288617886178862,
+  "test_loss": 0.5042831197817862,
+  "test_acc": 0.9055374592833876,
+  "total_train_time_sec": 85.35640790010802,
+  "train_cm": [
+    [
+      158,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      400,
+      0,
+      2,
+      0
+    ],
+    [
+      1,
+      0,
+      305,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1,
+      773,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      326
+    ]
+  ],
+  "test_cm": [
+    [
+      47,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      114,
+      0,
+      9,
+      3
+    ],
+    [
+      8,
+      2,
+      77,
+      1,
+      8
+    ],
+    [
+      1,
+      10,
+      6,
+      226,
+      0
+    ],
+    [
+      0,
+      3,
+      7,
+      0,
+      92
+    ]
+  ],
+  "test_cm_normalized": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.904762,
+      0.0,
+      0.071429,
+      0.02381
+    ],
+    [
+      0.083333,
+      0.020833,
+      0.802083,
+      0.010417,
+      0.083333
+    ],
+    [
+      0.004115,
+      0.041152,
+      0.024691,
+      0.930041,
+      0.0
+    ],
+    [
+      0.0,
+      0.029412,
+      0.068627,
+      0.0,
+      0.901961
+    ]
+  ],
+  "test_classification_report_text": "              precision    recall  f1-score   support\n\n         bhA     0.8393    1.0000    0.9126        47\n         hai     0.8837    0.9048    0.8941       126\n          ka     0.8556    0.8021    0.8280        96\n          ne     0.9576    0.9300    0.9436       243\n          tA     0.8932    0.9020    0.8976       102\n\n    accuracy                         0.9055       614\n   macro avg     0.8859    0.9078    0.8952       614\nweighted avg     0.9067    0.9055    0.9054       614\n",
+  "checkpoint_path": null
+}

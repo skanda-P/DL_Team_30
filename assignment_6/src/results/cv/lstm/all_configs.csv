@@ -1,0 +1,16 @@
+stage,hidden_size,num_layers,bidirectional,dropout,optimizer,lr,batch_size,n_params,epochs,converged,diverged,stop_reason,train_error,train_acc,val_loss,val_acc,test_acc
+stage1_arch,32,1,False,0.0,adam,0.001,32,9509,31,True,False,converged,0.031518,0.99187,0.330155,0.924797,0.92671
+stage1_arch,64,1,False,0.0,adam,0.001,32,27205,49,True,False,converged,0.000947,1.0,0.572568,0.908537,0.929967
+stage1_arch,128,1,False,0.0,adam,0.001,32,87173,30,True,False,converged,0.000588,1.0,0.356212,0.939024,0.938111
+stage1_arch,32,2,False,0.0,adam,0.001,32,17957,61,True,False,converged,0.001167,1.0,0.467661,0.922764,0.928339
+stage1_arch,64,2,False,0.0,adam,0.001,32,60485,11,True,False,converged,0.084394,0.979675,0.246442,0.936992,0.934853
+stage1_arch,128,2,False,0.0,adam,0.001,32,219269,41,True,False,converged,0.000346,1.0,0.29825,0.957317,0.939739
+stage1_arch,32,3,False,0.0,adam,0.001,32,26405,59,True,False,converged,0.010987,0.998476,0.36798,0.936992,0.910423
+stage1_arch,64,3,False,0.0,adam,0.001,32,93765,64,True,False,converged,0.000367,1.0,0.328056,0.949187,0.952769
+stage1_arch,128,3,False,0.0,adam,0.001,32,351365,53,True,False,converged,0.000197,1.0,0.434717,0.941057,0.954397
+stage2_opt,128,2,False,0.0,adam,0.003,32,219269,38,True,False,converged,0.000232,1.0,0.437892,0.932927,0.956026
+stage2_opt,128,2,False,0.0,adam,0.0003,32,219269,70,True,False,converged,0.000285,1.0,0.387916,0.945122,0.944625
+stage2_opt,128,2,False,0.0,rmsprop,0.001,32,219269,48,True,False,converged,6.9e-05,1.0,0.296054,0.963415,0.957655
+stage2_opt,128,2,False,0.0,sgd,0.01,32,219269,46,True,False,converged,0.0174,0.996443,0.317883,0.932927,0.931596
+stage2_opt,128,2,False,0.2,adam,0.001,32,219269,30,True,False,converged,0.001566,0.999492,0.451125,0.932927,0.933225
+stage2_opt,128,2,True,0.0,adam,0.001,32,569605,29,True,False,converged,0.00025,1.0,0.274765,0.95122,0.954397

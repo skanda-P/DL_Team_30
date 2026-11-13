@@ -1,0 +1,3 @@
+| dataset | model | hidden_size | num_layers | bidirectional | dropout | optimizer | lr | batch_size | n_params | epochs | stop_reason | train_acc | val_acc | test_acc |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| cv | lstm | 128 | 2 | False | 0.0000 | rmsprop | 0.0010 | 32 | 219269 | 48 | converged | 100.00% | 96.34% | 95.77% |
