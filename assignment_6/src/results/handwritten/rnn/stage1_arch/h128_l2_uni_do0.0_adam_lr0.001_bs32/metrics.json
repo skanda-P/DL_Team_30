@@ -1,6 +1,6 @@
 {
   "run_id": "h128_l2_uni_do0.0_adam_lr0.001_bs32",
-  "run_dir": "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_6\\src\\results\\handwritten\\rnn\\stage1_arch\\h128_l2_uni_do0.0_adam_lr0.001_bs32",
+  "run_dir": "/home/student2/ul/ul_out/assignment_6/src/results/handwritten/rnn/stage1_arch/h128_l2_uni_do0.0_adam_lr0.001_bs32",
   "stage": "stage1_arch",
   "config": {
     "dataset": "handwritten",
@@ -14,7 +14,7 @@
     "batch_size": 32,
     "grad_clip": 1.0,
     "tol": 0.0001,
-    "max_epochs": 1000,
+    "max_epochs": 3000,
     "seed": 42,
     "split_seed": 1234,
     "stage": "stage1_arch"
@@ -27,17 +27,17 @@
     "tA"
   ],
   "param_count": 50565,
-  "epochs": 1000,
-  "converged": false,
+  "epochs": 713,
+  "converged": true,
   "diverged": false,
-  "stop_reason": "max_epochs_cap",
-  "train_error": 0.383514404296875,
-  "train_acc": 0.8768115942028986,
-  "val_loss": 0.6788027286529541,
-  "val_acc": 0.7681159420289855,
-  "test_loss": 0.24584408104419708,
-  "test_acc": 0.92,
-  "total_train_time_sec": 289.84300190000795,
+  "stop_reason": "converged",
+  "train_error": 0.0019470448605716228,
+  "train_acc": 1.0,
+  "val_loss": 2.598597526550293,
+  "val_acc": 0.6231884057971014,
+  "test_loss": 2.256542921066284,
+  "test_acc": 0.6,
+  "total_train_time_sec": 45.630464985995786,
   "train_cm": [
     [
       55,
@@ -48,31 +48,31 @@
     ],
     [
       0,
-      41,
-      1,
+      56,
       0,
-      14
+      0,
+      0
     ],
     [
       0,
-      1,
-      51,
       0,
-      3
+      55,
+      0,
+      0
     ],
     [
       0,
-      5,
-      1,
-      45,
-      4
+      0,
+      0,
+      55,
+      0
     ],
     [
       0,
-      5,
       0,
       0,
-      50
+      0,
+      55
     ]
   ],
   "test_cm": [
@@ -85,31 +85,31 @@
     ],
     [
       0,
-      15,
+      11,
       0,
-      0,
-      5
+      6,
+      3
     ],
     [
       0,
       0,
-      20,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      20,
-      0
+      8,
+      2,
+      10
     ],
     [
       0,
       2,
       1,
+      7,
+      10
+    ],
+    [
       0,
-      17
+      1,
+      4,
+      1,
+      14
     ]
   ],
   "test_cm_normalized": [
@@ -122,33 +122,33 @@
     ],
     [
       0.0,
-      0.75,
+      0.55,
       0.0,
-      0.0,
-      0.25
+      0.3,
+      0.15
     ],
     [
       0.0,
       0.0,
-      1.0,
-      0.0,
-      0.0
-    ],
-    [
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0
+      0.4,
+      0.1,
+      0.5
     ],
     [
       0.0,
       0.1,
       0.05,
+      0.35,
+      0.5
+    ],
+    [
       0.0,
-      0.85
+      0.05,
+      0.2,
+      0.05,
+      0.7
     ]
   ],
-  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    1.0000    1.0000        20\n         chA     0.8824    0.7500    0.8108        20\n          dA     0.9524    1.0000    0.9756        20\n          lA     1.0000    1.0000    1.0000        20\n          tA     0.7727    0.8500    0.8095        20\n\n    accuracy                         0.9200       100\n   macro avg     0.9215    0.9200    0.9192       100\nweighted avg     0.9215    0.9200    0.9192       100\n",
+  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    1.0000    1.0000        20\n         chA     0.7857    0.5500    0.6471        20\n          dA     0.6154    0.4000    0.4848        20\n          lA     0.4375    0.3500    0.3889        20\n          tA     0.3784    0.7000    0.4912        20\n\n    accuracy                         0.6000       100\n   macro avg     0.6434    0.6000    0.6024       100\nweighted avg     0.6434    0.6000    0.6024       100\n",
   "checkpoint_path": null
 }

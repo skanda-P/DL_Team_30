@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 
 class ConvergenceChecker:
-    def __init__(self, tol: float = 1e-4, min_epochs: int = 2, max_epochs: int = 1000) -> None:
+    def __init__(self, tol: float = 1e-4, min_epochs: int = 2, max_epochs: int = 3000) -> None:
         if tol <= 0:
             raise ValueError(f"tol must be positive, got {tol}")
         if min_epochs < 2:

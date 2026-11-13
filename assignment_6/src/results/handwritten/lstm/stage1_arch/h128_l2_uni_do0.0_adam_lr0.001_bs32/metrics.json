@@ -1,6 +1,6 @@
 {
   "run_id": "h128_l2_uni_do0.0_adam_lr0.001_bs32",
-  "run_dir": "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_6\\src\\results\\handwritten\\lstm\\stage1_arch\\h128_l2_uni_do0.0_adam_lr0.001_bs32",
+  "run_dir": "/home/student2/ul/ul_out/assignment_6/src/results/handwritten/lstm/stage1_arch/h128_l2_uni_do0.0_adam_lr0.001_bs32",
   "stage": "stage1_arch",
   "config": {
     "dataset": "handwritten",
@@ -14,7 +14,7 @@
     "batch_size": 32,
     "grad_clip": 1.0,
     "tol": 0.0001,
-    "max_epochs": 1000,
+    "max_epochs": 3000,
     "seed": 42,
     "split_seed": 1234,
     "stage": "stage1_arch"
@@ -27,17 +27,17 @@
     "tA"
   ],
   "param_count": 200325,
-  "epochs": 147,
+  "epochs": 128,
   "converged": true,
   "diverged": false,
   "stop_reason": "converged",
-  "train_error": 0.004977830220013857,
-  "train_acc": 1.0,
-  "val_loss": 0.1135781928896904,
-  "val_acc": 0.9855072463768116,
-  "test_loss": 0.07191459834575653,
-  "test_acc": 0.99,
-  "total_train_time_sec": 40.21498050005175,
+  "train_error": 0.04410525783896446,
+  "train_acc": 0.9855072463768116,
+  "val_loss": 0.36603519320487976,
+  "val_acc": 0.8985507246376812,
+  "test_loss": 0.2258153110742569,
+  "test_acc": 0.95,
+  "total_train_time_sec": 9.334252243992523,
   "train_cm": [
     [
       55,
@@ -48,10 +48,10 @@
     ],
     [
       0,
-      56,
+      52,
       0,
-      0,
-      0
+      2,
+      2
     ],
     [
       0,
@@ -85,17 +85,17 @@
     ],
     [
       0,
-      20,
+      19,
       0,
-      0,
+      1,
       0
     ],
     [
       0,
-      1,
-      19,
       0,
-      0
+      16,
+      1,
+      3
     ],
     [
       0,
@@ -122,17 +122,17 @@
     ],
     [
       0.0,
-      1.0,
+      0.95,
       0.0,
-      0.0,
+      0.05,
       0.0
     ],
     [
       0.0,
-      0.05,
-      0.95,
       0.0,
-      0.0
+      0.8,
+      0.05,
+      0.15
     ],
     [
       0.0,
@@ -149,6 +149,6 @@
       1.0
     ]
   ],
-  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    1.0000    1.0000        20\n         chA     0.9524    1.0000    0.9756        20\n          dA     1.0000    0.9500    0.9744        20\n          lA     1.0000    1.0000    1.0000        20\n          tA     1.0000    1.0000    1.0000        20\n\n    accuracy                         0.9900       100\n   macro avg     0.9905    0.9900    0.9900       100\nweighted avg     0.9905    0.9900    0.9900       100\n",
+  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    1.0000    1.0000        20\n         chA     1.0000    0.9500    0.9744        20\n          dA     1.0000    0.8000    0.8889        20\n          lA     0.9091    1.0000    0.9524        20\n          tA     0.8696    1.0000    0.9302        20\n\n    accuracy                         0.9500       100\n   macro avg     0.9557    0.9500    0.9492       100\nweighted avg     0.9557    0.9500    0.9492       100\n",
   "checkpoint_path": null
 }

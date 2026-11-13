@@ -1,6 +1,6 @@
 {
   "run_id": "h32_l1_uni_do0.0_adam_lr0.001_bs32",
-  "run_dir": "D:\\BTech\\SEM5\\deep learning\\assignments\\assignment_6\\src\\results\\handwritten\\lstm\\stage1_arch\\h32_l1_uni_do0.0_adam_lr0.001_bs32",
+  "run_dir": "/home/student2/ul/ul_out/assignment_6/src/results/handwritten/lstm/stage1_arch/h32_l1_uni_do0.0_adam_lr0.001_bs32",
   "stage": "stage1_arch",
   "config": {
     "dataset": "handwritten",
@@ -14,7 +14,7 @@
     "batch_size": 32,
     "grad_clip": 1.0,
     "tol": 0.0001,
-    "max_epochs": 1000,
+    "max_epochs": 3000,
     "seed": 42,
     "split_seed": 1234,
     "stage": "stage1_arch"
@@ -27,17 +27,17 @@
     "tA"
   ],
   "param_count": 4773,
-  "epochs": 484,
+  "epochs": 287,
   "converged": true,
   "diverged": false,
   "stop_reason": "converged",
-  "train_error": 0.047485943883657455,
-  "train_acc": 0.9891304347826086,
-  "val_loss": 0.028964780271053314,
-  "val_acc": 0.9855072463768116,
-  "test_loss": 0.10483219474554062,
-  "test_acc": 0.97,
-  "total_train_time_sec": 78.74394820001908,
+  "train_error": 0.038865312933921814,
+  "train_acc": 0.9963768115942029,
+  "val_loss": 0.223594069480896,
+  "val_acc": 0.927536231884058,
+  "test_loss": 0.13480554521083832,
+  "test_acc": 0.96,
+  "total_train_time_sec": 13.386253650998697,
   "train_cm": [
     [
       55,
@@ -56,99 +56,99 @@
     [
       0,
       0,
-      54,
-      1,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
       55,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      54,
       0
     ],
     [
       0,
       0,
-      1,
-      1,
-      53
+      0,
+      0,
+      55
     ]
   ],
   "test_cm": [
     [
-      20,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      18,
-      0,
-      2,
-      0
-    ],
-    [
-      0,
-      0,
-      20,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      20,
-      0
-    ],
-    [
-      0,
+      19,
       0,
       1,
       0,
-      19
+      0
+    ],
+    [
+      0,
+      19,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      18,
+      0,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      20,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      20
     ]
   ],
   "test_cm_normalized": [
     [
-      1.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0
-    ],
-    [
-      0.0,
-      0.9,
-      0.0,
-      0.1,
-      0.0
-    ],
-    [
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      0.0
-    ],
-    [
-      0.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0
-    ],
-    [
-      0.0,
+      0.95,
       0.0,
       0.05,
       0.0,
-      0.95
+      0.0
+    ],
+    [
+      0.0,
+      0.95,
+      0.0,
+      0.05,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.9,
+      0.0,
+      0.1
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
     ]
   ],
-  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    1.0000    1.0000        20\n         chA     1.0000    0.9000    0.9474        20\n          dA     0.9524    1.0000    0.9756        20\n          lA     0.9091    1.0000    0.9524        20\n          tA     1.0000    0.9500    0.9744        20\n\n    accuracy                         0.9700       100\n   macro avg     0.9723    0.9700    0.9699       100\nweighted avg     0.9723    0.9700    0.9699       100\n",
+  "test_classification_report_text": "              precision    recall  f1-score   support\n\n           a     1.0000    0.9500    0.9744        20\n         chA     1.0000    0.9500    0.9744        20\n          dA     0.9474    0.9000    0.9231        20\n          lA     0.9524    1.0000    0.9756        20\n          tA     0.9091    1.0000    0.9524        20\n\n    accuracy                         0.9600       100\n   macro avg     0.9618    0.9600    0.9600       100\nweighted avg     0.9618    0.9600    0.9600       100\n",
   "checkpoint_path": null
 }

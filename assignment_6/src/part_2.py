@@ -56,7 +56,7 @@ def build_default_config(
     batch_size: int = 32,
     grad_clip: Optional[float] = 1.0,
     tol: float = 1e-4,
-    max_epochs: int = 1000,
+    max_epochs: int = 3000,
     seed: int = 42,
     split_seed: int = DEFAULT_SPLIT_SEED,
     stage: str = "single",
@@ -104,10 +104,14 @@ def save_checkpoint(
 
 
 def select_best(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    converged = [r for r in results if r.get("converged") and not r.get("diverged")]
+    candidates = converged if converged else results
+    if not converged:
+        logger.warning("No model converged before reaching max_epochs limit. Selecting from non-converged runs.")
     return max(
-        results,
+        candidates,
         key=lambda r: (
-            0 if r.get("diverged") else 1,
+            1 if (r.get("converged") and not r.get("diverged")) else 0,
             float(r["val_acc"]),
             -float(r["val_loss"]) if np.isfinite(r["val_loss"]) else -1e12,
             -int(r["param_count"]),
@@ -137,7 +141,7 @@ def run_training(
         batch_size=config.get("batch_size", 32),
         grad_clip=config.get("grad_clip", 1.0),
         tol=config.get("tol", 1e-4),
-        max_epochs=config.get("max_epochs", 1000),
+        max_epochs=config.get("max_epochs", 3000),
         seed=config.get("seed", 42),
         split_seed=config.get("split_seed", DEFAULT_SPLIT_SEED),
         stage=config.get("stage", "single"),
@@ -342,7 +346,7 @@ def run_sweep(
     model_type: str,
     prep: PreparedData,
     seed: int = 42,
-    max_epochs: int = 1000,
+    max_epochs: int = 3000,
     tol: float = 1e-4,
     split_seed: int = DEFAULT_SPLIT_SEED,
     data_root: str | Path = DATA_ROOT,
@@ -543,7 +547,7 @@ def run_sweep(
 def run_part_2(
     model: str = "both",
     seed: int = 42,
-    max_epochs: int = 1000,
+    max_epochs: int = 3000,
     tol: float = 1e-4,
     split_seed: int = DEFAULT_SPLIT_SEED,
     force: bool = False,
@@ -600,7 +604,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Assignment 6 Part 2: CV Segment Speech Pipeline")
     parser.add_argument("--model", type=str, default="both", choices=["both", "rnn", "lstm"])
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--max_epochs", type=int, default=1000)
+    parser.add_argument("--max_epochs", type=int, default=3000)
     parser.add_argument("--tol", type=float, default=1e-4)
     parser.add_argument("--split_seed", type=int, default=DEFAULT_SPLIT_SEED)
     parser.add_argument("--force", action="store_true")

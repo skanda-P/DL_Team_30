@@ -48,7 +48,7 @@ assignment_6/src/
 ## 4. Experimental Protocol
 
 - **Split Ratio:** Stratified 70% train / 15% validation / 15% test.
-- **Stopping Rule:** Converged when average epoch change in training error satisfies $\frac{1}{B} \sum_{i=1}^B |E_t - E_{t-1}| < 10^{-4}$ with patience 5, or safety ceiling of 1000 epochs.
+- **Stopping Rule:** Converged when average epoch change in training error satisfies $|E_t - E_{t-1}| < 10^{-4}$ with patience 5, or safety ceiling of 3000 epochs. Best models are strictly selected from runs that converged before hitting the max epoch count.
 - **2-Stage Hyperparameter Study (15 configs per model type, 30 per dataset):**
   - **Stage 1 (9 configs):** Grid of hidden sizes `[32, 64, 128]` $\times$ layers `[1, 2, 3]`.
   - **Stage 2 (6 configs):** Tuning around the Stage 1 winner:
